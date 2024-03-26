@@ -1,0 +1,274 @@
+{
+  "name": "codex-project-manager",
+  "displayName": "Codex Project Manager",
+  "description": "An extension to help users initialize different types of Bible translation projects.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.87.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "codex-project-manager.initializeNewProject",
+        "title": "Initialize New Project",
+        "category": "Codex Project Management"
+      },
+      {
+        "command": "codex-project-manager.openProjectSettings",
+        "title": "Open Project Settings",
+        "category": "Codex Project Management"
+      },
+      {
+        "command": "codex-project-manager.startWalkthrough",
+        "title": "Start Walkthrough",
+        "category": "Codex Project Management"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "codex-project-manager.welcomeView",
+          "name": "Codex Project Manager",
+          "when": "workbenchState == empty"
+        }
+      ]
+    },
+    "walkthroughs": [
+      {
+        "id": "setupLocalEnvironment",
+        "title": "Start a Codex Project",
+        "description": "A simple walkthrough to help you start a new Codex translation project.",
+        "steps": [
+          {
+            "id": "downloadLMStudio",
+            "title": "Download LM Studio",
+            "description": "Download LM Studio to get a local LLM running to power your Translator's Copilot.\n\n[Download LM Studio](https://lmstudio.ai)",
+            "media": {
+              "image": "./src/media/lmstudio.gif",
+              "altText": "LM Studio"
+            }
+          }
+        ]
+      },
+      {
+        "id": "codexWalkthrough",
+        "title": "Start a Codex Project",
+        "description": "A simple walkthrough to help you start a new Codex translation project.",
+        "steps": [
+          {
+            "id": "runcommand",
+            "title": "Run Command",
+            "description": "This step will run a command and check off once it has been run.\n[Run Command](command:codex-project-manager.runCommand)",
+            "media": {
+              "image": "media/image.png",
+              "altText": "Empty image"
+            },
+            "completionEvents": [
+              "onCommand:codex-project-manager.runCommand"
+            ]
+          },
+          {
+            "id": "changesetting",
+            "title": "Change Setting",
+            "description": "This step will change a setting and check off when the setting has changed\n[Change Setting](command:codex-project-manager.changeSetting)",
+            "media": {
+              "image": "media/image.png",
+              "altText": "Empty image"
+            },
+            "completionEvents": [
+              "onSettingChanged:codex-project-manager.sampleSetting"
+            ]
+          },
+          {
+            "id": "setcontext",
+            "title": "Set Context",
+            "description": "This step will set a context key, and check off when that context has been set\n[Set Context](command:codex-project-manager.setContext)",
+            "media": {
+              "image": "media/image.png",
+              "altText": "Empty image"
+            },
+            "completionEvents": [
+              "onContext:gettingStartedContextKey"
+            ]
+          },
+          {
+            "id": "install python extension",
+            "title": "Install Python Extension",
+            "description": "Click here to install the Python Extension. This step will complete once it has been installed.\n[Here](command:workbench.extensions.installExtension?%22ms-python.python%22)",
+            "media": {
+              "image": "media/image.png",
+              "altText": "Empty image"
+            },
+            "completionEvents": [
+              "extensionInstalled:ms-python.python"
+            ]
+          },
+          {
+            "id": "open terminal view",
+            "title": "Open Terminal",
+            "description": "Click [here](command:workbench.action.terminal.toggleTerminal) to open terminal. This step will complete once the terminal has been opened.",
+            "media": {
+              "image": "media/image.png",
+              "altText": "Empty image"
+            },
+            "completionEvents": [
+              "onView:terminal"
+            ]
+          },
+          {
+            "id": "usesvg",
+            "title": "Use SVG's",
+            "description": "Try out using SVG's in your content, they can react to the theme (try: ``var(--vscode-foreground)``) and even host command links (try: ``xlink:href=\"command:``)",
+            "media": {
+              "svg": "media/image.svg",
+              "altText": "Empty svg image"
+            }
+          },
+          {
+            "id": "mac",
+            "title": "UI Platform: Mac",
+            "description": "This step will only show on a Mac.",
+            "when": "isMac",
+            "media": {
+              "markdown": "media/mac.md"
+            }
+          },
+          {
+            "id": "windows",
+            "title": "UI Platform: Windows",
+            "description": "This step will only show on Windows",
+            "when": "isWindows",
+            "media": {
+              "markdown": "media/windows.md"
+            }
+          },
+          {
+            "id": "linux",
+            "title": "UI Platform: Linux",
+            "description": "This step will only show on Linux",
+            "when": "isLinux",
+            "media": {
+              "markdown": "media/linux.md"
+            }
+          },
+          {
+            "id": "macRemote",
+            "title": "Workspace Platform: Mac",
+            "description": "This step will only show on Mac remotes.",
+            "when": "workspacePlatform == 'mac'",
+            "media": {
+              "markdown": "media/mac.md"
+            }
+          },
+          {
+            "id": "windowsRemote",
+            "title": "Workspace Platform: Windows",
+            "description": "This step will only show on Windows remotes",
+            "when": "workspacePlatform == 'windows'",
+            "media": {
+              "markdown": "media/windows.md"
+            }
+          },
+          {
+            "id": "linuxRemote",
+            "title": "Workspace Platform: Linux",
+            "description": "This step will only show on Linux remotes",
+            "when": "workspacePlatform == 'linux'",
+            "media": {
+              "markdown": "media/linux.md"
+            }
+          },
+          {
+            "id": "webRemote",
+            "title": "Workspace Platform: Web",
+            "description": "This step will only show on webworker remotes",
+            "when": "workspacePlatform == 'webworker'",
+            "media": {
+              "markdown": "media/linux.md"
+            }
+          },
+          {
+            "id": "showSources",
+            "title": "View Sources",
+            "description": "Open a folder contaning the sources of this extension.\n[View Sources](command:codex-project-manager.viewSources)",
+            "media": {
+              "image": "media/image.png",
+              "altText": "Empty image"
+            }
+          }
+        ]
+      }
+    ],
+    "configuration": {
+      "title": "Codex Project Manager",
+      "properties": {
+        "codex-project-manager.projectName": {
+          "type": "string",
+          "default": "",
+          "description": "Name of the project"
+        },
+        "codex-project-manager.projectCategory": {
+          "type": "string",
+          "default": "",
+          "description": "Category of the project"
+        },
+        "codex-project-manager.userName": {
+          "type": "string",
+          "default": "",
+          "description": "Name of the user"
+        },
+        "codex-project-manager.abbreviation": {
+          "type": "string",
+          "default": "",
+          "description": "Project abbreviation"
+        },
+        "codex-project-manager.sourceLanguage": {
+          "type": "object",
+          "default": {},
+          "description": "Source language for the project"
+        },
+        "codex-project-manager.targetLanguage": {
+          "type": "object",
+          "default": {},
+          "description": "Target language for the project"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.3",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.87.0",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "@vscode/test-electron": "^2.3.6",
+    "eslint": "^8.52.0",
+    "glob": "^10.3.10",
+    "mocha": "^10.2.0",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.2.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "codex-types": "^0.0.2"
+  }
+}
