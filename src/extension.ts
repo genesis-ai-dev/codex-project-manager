@@ -17,6 +17,9 @@ export async function activate(context: vscode.ExtensionContext) {
       if (projectDetails) {
         await updateProjectSettings(projectDetails);
       }
+      // Here is where we need to think through seeding the project files... I guess we just seed them all, and 
+      // ideally get a source text Bible (at least one?)
+      // While we do this, let's make OBS notebooks just because, or else leave a FIXME
     }),
     vscode.commands.registerCommand('codex-project-manager.openProjectSettings', () =>
       vscode.commands.executeCommand('workbench.action.openWorkspaceSettings', 'codex-project-manager')

@@ -43,8 +43,8 @@
     "walkthroughs": [
       {
         "id": "setupLocalEnvironment",
-        "title": "Start a Codex Project",
-        "description": "A simple walkthrough to help you start a new Codex translation project.",
+        "title": "Set up Translator's Copilot",
+        "description": "A simple walkthrough to help you set up a large language model on your device to benefit from the Copilot feature.",
         "steps": [
           {
             "id": "downloadLMStudio",
