@@ -3,6 +3,13 @@
   "displayName": "Codex Project Manager",
   "description": "An extension to help users initialize different types of Bible translation projects.",
   "version": "0.0.1",
+  "publisher": "project-accelerate",
+  "homepage": "https://codex-editor.gitbook.io/",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/genesis-ai-dev/codex-project-manager"
+  },
   "engines": {
     "vscode": "^1.87.0"
   },
@@ -18,6 +25,11 @@
       {
         "command": "codex-project-manager.initializeNewProject",
         "title": "Initialize New Project",
+        "category": "Codex Project Management"
+      },
+      {
+        "command": "codex-project-manager.nameProject",
+        "title": "Name Project",
         "category": "Codex Project Management"
       },
       {
@@ -62,6 +74,42 @@
         "title": "Start a Codex Project",
         "description": "A simple walkthrough to help you start a new Codex translation project.",
         "steps": [
+          {
+            "id": "openFolder",
+            "title": "Open Folder",
+            "description": "First, let's open a folder where your new Codex project will be initialized.\n[Open Folder](command:workbench.action.files.openFolder)",
+            "media": {
+              "image": "media/openFolder.png",
+              "altText": "Open Folder"
+            },
+            "completionEvents": [
+              "onFolderSelected"
+            ]
+          },
+          {
+            "id": "projectName",
+            "title": "Name Project",
+            "description": "Now that we have a folder, let's name your new Codex project.\n[Name Project](command:codex-project-manager.nameProject)",
+            "media": {
+              "image": "media/initializeProject.png",
+              "altText": "Name Project"
+            },
+            "completionEvents": [
+              "onCommand:codex-project-manager.nameProject"
+            ]
+          },
+          {
+            "id": "initializeProject",
+            "title": "Initialize Project",
+            "description": "Now that we have a folder, let's initialize your new Codex project.\n[Initialize Project](command:codex-project-manager.initializeNewProject)",
+            "media": {
+              "image": "media/initializeProject.png",
+              "altText": "Initialize Project"
+            },
+            "completionEvents": [
+              "onCommand:codex-project-manager.initializeNewProject"
+            ]
+          },
           {
             "id": "runcommand",
             "title": "Run Command",
@@ -197,7 +245,7 @@
           {
             "id": "showSources",
             "title": "View Sources",
-            "description": "Open a folder contaning the sources of this extension.\n[View Sources](command:codex-project-manager.viewSources)",
+            "description": "Open a folder containing the sources of this extension.\n[View Sources](command:codex-project-manager.viewSources)",
             "media": {
               "image": "media/image.png",
               "altText": "Empty image"
@@ -217,7 +265,19 @@
         "codex-project-manager.projectCategory": {
           "type": "string",
           "default": "",
-          "description": "Category of the project"
+          "description": "Category of the project",
+          "enum": [
+            "Scripture",
+            "Gloss",
+            "Parascriptural",
+            "Peripheral"
+          ],
+          "enumDescriptions": [
+            "Projects focused on scripture texts.",
+            "Projects focused on glossaries or dictionaries.",
+            "Projects related to parascriptural materials.",
+            "Projects dealing with peripheral or supplementary materials."
+          ]
         },
         "codex-project-manager.userName": {
           "type": "string",
