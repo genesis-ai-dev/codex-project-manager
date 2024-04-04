@@ -5,9 +5,9 @@ import * as vscode from "vscode";
 import { LanguageCodes } from "./languageUtils";
 
 export interface ProjectDetails {
-  projectName: string;
+  projectName?: string;
   projectCategory: string;
-  userName: string;
+  userName?: string;
   abbreviation: string;
   sourceLanguage: LanguageMetadata;
   targetLanguage: LanguageMetadata;
@@ -26,19 +26,19 @@ export async function promptForProjectDetails(): Promise<
     return;
   }
 
-  const projectName = await vscode.window.showInputBox({
-    prompt: "Enter the project name",
-  });
-  if (!projectName) {
-    return;
-  }
+  //   const projectName = await vscode.window.showInputBox({
+  //     prompt: "Enter the project name",
+  //   });
+  //   if (!projectName) {
+  //     return;
+  //   }
 
-  const userName = await vscode.window.showInputBox({
-    prompt: "Enter your username",
-  });
-  if (!userName) {
-    return;
-  }
+  //   const userName = await vscode.window.showInputBox({
+  //     prompt: "Enter your username",
+  //   });
+  //   if (!userName) {
+  //     return;
+  //   }
 
   const abbreviation = await vscode.window.showInputBox({
     prompt: "Enter the project abbreviation",
@@ -89,9 +89,9 @@ export async function promptForProjectDetails(): Promise<
   targetLanguage.projectStatus = LanguageProjectStatus.TARGET;
 
   return {
-    projectName,
+    // projectName,
     projectCategory,
-    userName,
+    // userName,
     abbreviation,
     sourceLanguage,
     targetLanguage,
@@ -128,14 +128,24 @@ export async function initializeProjectMetadata(details: ProjectDetails) {
   // Initialize a new project with the given details and return the project object
   const newProject: Project = {
     format: "scripture burrito",
-    projectName: details.projectName,
+    projectName:
+      details.projectName ||
+      vscode.workspace
+        .getConfiguration("codex-project-manager")
+        .get<string>("projectName") ||
+      "Codex Project",
     meta: {
       version: "0.0.0",
       category: details.projectCategory,
       generator: {
         softwareName: "Codex Editor",
         softwareVersion: "0.0.1",
-        userName: details.userName,
+        userName:
+          details.userName ||
+          vscode.workspace
+            .getConfiguration("codex-project-manager")
+            .get<string>("userName") ||
+          "Unknown",
       },
       defaultLocale: "en",
       dateCreated: new Date().toDateString(),

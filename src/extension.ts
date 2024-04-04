@@ -4,11 +4,14 @@ import {
   promptForProjectDetails,
   updateMetadataFile,
 } from "./utils/projectUtils";
-import { initializeProject } from "./utils/projectInitializers";
+import { downloadBible, initializeProject } from "./utils/projectInitializers";
 
 export async function activate(context: vscode.ExtensionContext) {
   console.log("Codex Project Manager is now active!");
-
+  vscode.commands.registerCommand(
+    "codex-project-manager.downloadSourceTextBibles",
+    await downloadBible
+  );
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "codex-project-manager.initializeNewProject",
@@ -21,6 +24,7 @@ export async function activate(context: vscode.ExtensionContext) {
         // Here is where we need to think through seeding the project files... I guess we just seed them all, and
         // ideally get a source text Bible (at least one?)
         // While we do this, let's make OBS notebooks just because, or else leave a FIXME
+        // add something ??
       }
     ),
     vscode.commands.registerCommand(
@@ -38,6 +42,24 @@ export async function activate(context: vscode.ExtensionContext) {
         await vscode.commands.executeCommand(
           "workbench.action.openWorkspaceSettings",
           "@ext:project-accelerate.codex-project-manager codex-project-manager.projectName"
+        );
+      }
+    ),
+    vscode.commands.registerCommand(
+      "codex-project-manager.userName",
+      async () => {
+        const settingUri = vscode.Uri.file(
+          vscode.workspace.getConfiguration().get("settings.json") || ""
+        );
+        await vscode.commands.executeCommand("vscode.open", settingUri, {
+          viewColumn: vscode.ViewColumn.Beside,
+        });
+        // await vscode.commands.executeCommand(
+        //   "workbench.action.closeActiveEditor"
+        // );
+        await vscode.commands.executeCommand(
+          "workbench.action.openWorkspaceSettings",
+          "@ext:project-accelerate.codex-project-manager codex-project-manager.userName"
         );
       }
     ),

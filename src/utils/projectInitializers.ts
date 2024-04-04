@@ -290,7 +290,7 @@ export async function initializeProject() {
     "codex-editor.setEditorFontToTargetLanguage"
   );
   await vscode.commands.executeCommand(
-    "codex-editor-extension.downloadSourceTextBibles"
+    "codex-project-manager.downloadSourceTextBibles"
   );
 }
 
