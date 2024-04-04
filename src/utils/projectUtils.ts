@@ -6,9 +6,9 @@ import { LanguageCodes } from "./languageUtils";
 
 export interface ProjectDetails {
   projectName?: string;
-  projectCategory: string;
+  projectCategory?: string;
   userName?: string;
-  abbreviation: string;
+  abbreviation?: string;
   sourceLanguage: LanguageMetadata;
   targetLanguage: LanguageMetadata;
 }
@@ -18,13 +18,13 @@ export async function promptForProjectDetails(): Promise<
 > {
   // Prompt user for project details and return them
 
-  const projectCategory = await vscode.window.showQuickPick(
-    ["Scripture", "Gloss", "Parascriptural", "Peripheral"],
-    { placeHolder: "Select the project category" }
-  );
-  if (!projectCategory) {
-    return;
-  }
+  //   const projectCategory = await vscode.window.showQuickPick(
+  //     ["Scripture", "Gloss", "Parascriptural", "Peripheral"],
+  //     { placeHolder: "Select the project category" }
+  //   );
+  //   if (!projectCategory) {
+  //     return;
+  //   }
 
   //   const projectName = await vscode.window.showInputBox({
   //     prompt: "Enter the project name",
@@ -40,13 +40,13 @@ export async function promptForProjectDetails(): Promise<
   //     return;
   //   }
 
-  const abbreviation = await vscode.window.showInputBox({
-    prompt: "Enter the project abbreviation",
-    placeHolder: "e.g. KJV, NASB, RSV, etc.",
-  });
-  if (!abbreviation) {
-    return;
-  }
+  //   const abbreviation = await vscode.window.showInputBox({
+  //     prompt: "Enter the project abbreviation",
+  //     placeHolder: "e.g. KJV, NASB, RSV, etc.",
+  //   });
+  //   if (!abbreviation) {
+  //     return;
+  //   }
   const languages = LanguageCodes;
   const sourceLanguagePick = await vscode.window.showQuickPick(
     languages.map((lang: LanguageMetadata) => `${lang.refName} (${lang.tag})`),
@@ -90,9 +90,9 @@ export async function promptForProjectDetails(): Promise<
 
   return {
     // projectName,
-    projectCategory,
+    // projectCategory,
     // userName,
-    abbreviation,
+    // abbreviation,
     sourceLanguage,
     targetLanguage,
   };
@@ -136,7 +136,12 @@ export async function initializeProjectMetadata(details: ProjectDetails) {
       "Codex Project",
     meta: {
       version: "0.0.0",
-      category: details.projectCategory,
+      category:
+        details.projectCategory ||
+        vscode.workspace
+          .getConfiguration("codex-project-manager")
+          .get<string>("projectCategory") ||
+        "Scripture", // fixme: does this needed in multi modal?
       generator: {
         softwareName: "Codex Editor",
         softwareVersion: "0.0.1",
