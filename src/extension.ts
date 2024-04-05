@@ -5,9 +5,11 @@ import {
   updateMetadataFile,
 } from "./utils/projectUtils";
 import {
+  checkForMissingFiles,
   downloadBible,
   initializeProject,
   setSourceAndTargetLanguage,
+  setTargetFont,
 } from "./utils/projectInitializers";
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -16,6 +18,10 @@ export async function activate(context: vscode.ExtensionContext) {
     "codex-project-manager.downloadSourceTextBibles",
     await downloadBible
   );
+  vscode.commands.registerCommand(
+    "codex-project-manager.setEditorFontToTargetLanguage",
+    await setTargetFont
+  );
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "codex-project-manager.initializeNewProject",
@@ -23,7 +29,15 @@ export async function activate(context: vscode.ExtensionContext) {
         // const projectDetails = await promptForProjectDetails();
         // if (projectDetails) {
         //   await updateProjectSettings(projectDetails);
-        await initializeProject();
+        try {
+          await initializeProject();
+          await checkForMissingFiles();
+        } catch (error) {
+          console.error(
+            "Error initializing project or checking for missing files:",
+            error
+          );
+        }
         // }
         // Here is where we need to think through seeding the project files... I guess we just seed them all, and
         // ideally get a source text Bible (at least one?)

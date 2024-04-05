@@ -6,3 +6,4 @@ node_modules
 /.vscode
 /comments.json
 /pnpm-lock.yaml
+/src/.DS_Store

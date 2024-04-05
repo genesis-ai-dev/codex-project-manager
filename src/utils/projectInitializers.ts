@@ -226,7 +226,7 @@ export async function setSourceAndTargetLanguage() {
     );
   }
   await vscode.commands.executeCommand(
-    "codex-editor.setEditorFontToTargetLanguage"
+    "codex-project-manager.setEditorFontToTargetLanguage"
   );
   await vscode.commands.executeCommand(
     "codex-project-manager.downloadSourceTextBibles"
@@ -308,15 +308,13 @@ export async function initializeProject() {
       `Failed to initialize new project: ${error}`
     );
   }
-  await vscode.commands.executeCommand(
-    "scripture-explorer-activity-bar.refreshEntry"
-  );
-  await vscode.commands.executeCommand(
-    "codex-editor.setEditorFontToTargetLanguage"
-  );
-  await vscode.commands.executeCommand(
-    "codex-project-manager.downloadSourceTextBibles"
-  );
+  try {
+    await vscode.commands.executeCommand(
+      "scripture-explorer-activity-bar.refreshEntry"
+    );
+  } catch (error) {
+    console.log("error called commands of outside extension", error);
+  }
 }
 
 export async function checkForMissingFiles() {
