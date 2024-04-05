@@ -4,7 +4,11 @@ import {
   promptForProjectDetails,
   updateMetadataFile,
 } from "./utils/projectUtils";
-import { downloadBible, initializeProject } from "./utils/projectInitializers";
+import {
+  downloadBible,
+  initializeProject,
+  setSourceAndTargetLanguage,
+} from "./utils/projectInitializers";
 
 export async function activate(context: vscode.ExtensionContext) {
   console.log("Codex Project Manager is now active!");
@@ -25,6 +29,12 @@ export async function activate(context: vscode.ExtensionContext) {
         // ideally get a source text Bible (at least one?)
         // While we do this, let's make OBS notebooks just because, or else leave a FIXME
         // add something ??
+      }
+    ),
+    vscode.commands.registerCommand(
+      "codex-project-manager.setSourceAndTargetLanguage",
+      async () => {
+        await setSourceAndTargetLanguage();
       }
     ),
     vscode.commands.registerCommand(

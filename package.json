@@ -111,6 +111,18 @@
             ]
           },
           {
+            "id": "setSourceAndTargetLanguage",
+            "title": "Set Source And Target Language",
+            "description": "Now that we have a folder, let's initialize your new Codex project.\n[Select Language](command:codex-project-manager.setSourceAndTargetLanguage)",
+            "media": {
+              "image": "media/initializeProject.png",
+              "altText": "Initialize Project"
+            },
+            "completionEvents": [
+              "onCommand:codex-project-manager.setSourceAndTargetLanguage"
+            ]
+          },
+          {
             "id": "initializeProject",
             "title": "Initialize Project",
             "description": "Now that we have a folder, let's initialize your new Codex project.\n[Initialize Project](command:codex-project-manager.initializeNewProject)",

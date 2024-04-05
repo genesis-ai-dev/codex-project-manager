@@ -198,7 +198,7 @@ enum ConfirmationOptions {
   NotNeeded = "Not-Needed",
 }
 
-export async function initializeProject() {
+export async function setSourceAndTargetLanguage() {
   const workspaceFolder = vscode.workspace.workspaceFolders
     ? vscode.workspace.workspaceFolders[0]
     : undefined;
@@ -213,91 +213,96 @@ export async function initializeProject() {
   try {
     const projectDetails = await promptForProjectDetails();
     if (projectDetails) {
-      //   const projectFilePath = await vscode.Uri.joinPath(
-      //     workspaceFolder.uri,
-      //     "metadata.json"
-      //   );
-
-      //   const fileExists = await vscode.workspace.fs.stat(projectFilePath).then(
-      //     () => true,
-      //     () => false
-      //   );
-
-      //   if (fileExists) {
-      //     const fileData = await vscode.workspace.fs.readFile(projectFilePath);
-      //     const metadata = JSON.parse(fileData.toString());
-      //     const projectName = metadata.projectName;
-      //     const confirmDelete = await vscode.window.showInputBox({
-      //       prompt: `A project named ${projectName} already already exists. Type the project name to confirm deletion.`,
-      //       placeHolder: "Project name",
-      //     });
-      //     if (confirmDelete !== projectName) {
-      //       vscode.window.showErrorMessage(
-      //         "Project name does not match. Initialization cancelled."
-      //       );
-      //       return;
-      //     }
-      //   }
-
       const newProject = await initializeProjectMetadata(projectDetails);
       vscode.window.showInformationMessage(
         `New project initialized: ${newProject?.meta.generator.userName}'s ${newProject?.meta.category}`
       );
-
-      // Spawn notebooks based on project scope
-      const projectScope = newProject?.type.flavorType.currentScope;
-      if (!projectScope) {
-        vscode.window.showErrorMessage(
-          "Failed to initialize new project: project scope not found."
-        );
-        return;
-      }
-      const books = Object.keys(projectScope);
-
-      const codexFiles = await vscode.workspace.findFiles("**/*.codex");
-      let overwriteSelection = ConfirmationOptions.NotNeeded;
-
-      if (codexFiles.length > 0) {
-        const userChoice = await vscode.window.showWarningMessage(
-          "Do you want to overwrite any existing .codex project files?",
-          { modal: true }, // This option ensures the dialog stays open until an explicit choice is made.
-          ConfirmationOptions.Yes,
-          ConfirmationOptions.No
-        );
-        overwriteSelection =
-          userChoice === ConfirmationOptions.Yes
-            ? ConfirmationOptions.Yes
-            : ConfirmationOptions.No;
-      }
-
-      switch (overwriteSelection) {
-        case ConfirmationOptions.NotNeeded:
-          vscode.window.showInformationMessage("Creating Codex Project.");
-          break;
-        case ConfirmationOptions.Yes:
-          vscode.window.showInformationMessage(
-            "Creating Codex Project with overwrite."
-          );
-          break;
-        default:
-          vscode.window.showInformationMessage(
-            "Creating Codex Project without overwrite."
-          );
-          break;
-      }
-      const shouldOverWrite =
-        overwriteSelection === ConfirmationOptions.Yes ||
-        overwriteSelection === ConfirmationOptions.NotNeeded;
-      await createProjectNotebooks({
-        shouldOverWrite,
-        books,
-      });
-      await createProjectCommentFiles({
-        shouldOverWrite,
-      });
     } else {
       vscode.window.showInformationMessage("Project initialization cancelled.");
     }
+  } catch (error) {
+    vscode.window.showErrorMessage(
+      `Failed to initialize new project: ${error}`
+    );
+  }
+  await vscode.commands.executeCommand(
+    "codex-editor.setEditorFontToTargetLanguage"
+  );
+  await vscode.commands.executeCommand(
+    "codex-project-manager.downloadSourceTextBibles"
+  );
+}
+
+export async function initializeProject() {
+  const workspaceFolder = vscode.workspace.workspaceFolders
+    ? vscode.workspace.workspaceFolders[0]
+    : undefined;
+  if (!workspaceFolder) {
+    console.error(
+      "No workspace folder found. Please open a folder to store your project in."
+    );
+    return;
+  }
+
+  vscode.window.showInformationMessage("Initializing new project...");
+  try {
+    let projectScope;
+    const projectFilePath = vscode.Uri.joinPath(
+      workspaceFolder.uri,
+      "metadata.json"
+    );
+    const fileData = await vscode.workspace.fs.readFile(projectFilePath);
+    const metadata = JSON.parse(fileData.toString());
+    projectScope = metadata?.type?.flavorType?.currentScope;
+    if (!projectScope) {
+      vscode.window.showErrorMessage(
+        "Failed to initialize new project: project scope not found."
+      );
+      return;
+    }
+    const books = Object.keys(projectScope);
+
+    const codexFiles = await vscode.workspace.findFiles("**/*.codex");
+    let overwriteSelection = ConfirmationOptions.NotNeeded;
+
+    if (codexFiles.length > 0) {
+      const userChoice = await vscode.window.showWarningMessage(
+        "Do you want to overwrite any existing .codex project files?",
+        { modal: true }, // This option ensures the dialog stays open until an explicit choice is made.
+        ConfirmationOptions.Yes,
+        ConfirmationOptions.No
+      );
+      overwriteSelection =
+        userChoice === ConfirmationOptions.Yes
+          ? ConfirmationOptions.Yes
+          : ConfirmationOptions.No;
+    }
+
+    switch (overwriteSelection) {
+      case ConfirmationOptions.NotNeeded:
+        vscode.window.showInformationMessage("Creating Codex Project.");
+        break;
+      case ConfirmationOptions.Yes:
+        vscode.window.showInformationMessage(
+          "Creating Codex Project with overwrite."
+        );
+        break;
+      default:
+        vscode.window.showInformationMessage(
+          "Creating Codex Project without overwrite."
+        );
+        break;
+    }
+    const shouldOverWrite =
+      overwriteSelection === ConfirmationOptions.Yes ||
+      overwriteSelection === ConfirmationOptions.NotNeeded;
+    await createProjectNotebooks({
+      shouldOverWrite,
+      books,
+    });
+    await createProjectCommentFiles({
+      shouldOverWrite,
+    });
   } catch (error) {
     vscode.window.showErrorMessage(
       `Failed to initialize new project: ${error}`
