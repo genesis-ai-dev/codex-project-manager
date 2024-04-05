@@ -192,6 +192,11 @@ export async function setTargetFont() {
     );
   }
 }
+enum ConfirmationOptions {
+  Yes = "Yes",
+  No = "No",
+  NotNeeded = "Not-Needed",
+}
 
 export async function initializeProject() {
   const workspaceFolder = vscode.workspace.workspaceFolders
@@ -208,31 +213,31 @@ export async function initializeProject() {
   try {
     const projectDetails = await promptForProjectDetails();
     if (projectDetails) {
-      const projectFilePath = await vscode.Uri.joinPath(
-        workspaceFolder.uri,
-        "metadata.json"
-      );
+      //   const projectFilePath = await vscode.Uri.joinPath(
+      //     workspaceFolder.uri,
+      //     "metadata.json"
+      //   );
 
-      const fileExists = await vscode.workspace.fs.stat(projectFilePath).then(
-        () => true,
-        () => false
-      );
+      //   const fileExists = await vscode.workspace.fs.stat(projectFilePath).then(
+      //     () => true,
+      //     () => false
+      //   );
 
-      if (fileExists) {
-        const fileData = await vscode.workspace.fs.readFile(projectFilePath);
-        const metadata = JSON.parse(fileData.toString());
-        const projectName = metadata.projectName;
-        const confirmDelete = await vscode.window.showInputBox({
-          prompt: `A project named ${projectName} already already exists. Type the project name to confirm deletion.`,
-          placeHolder: "Project name",
-        });
-        if (confirmDelete !== projectName) {
-          vscode.window.showErrorMessage(
-            "Project name does not match. Initialization cancelled."
-          );
-          return;
-        }
-      }
+      //   if (fileExists) {
+      //     const fileData = await vscode.workspace.fs.readFile(projectFilePath);
+      //     const metadata = JSON.parse(fileData.toString());
+      //     const projectName = metadata.projectName;
+      //     const confirmDelete = await vscode.window.showInputBox({
+      //       prompt: `A project named ${projectName} already already exists. Type the project name to confirm deletion.`,
+      //       placeHolder: "Project name",
+      //     });
+      //     if (confirmDelete !== projectName) {
+      //       vscode.window.showErrorMessage(
+      //         "Project name does not match. Initialization cancelled."
+      //       );
+      //       return;
+      //     }
+      //   }
 
       const newProject = await initializeProjectMetadata(projectDetails);
       vscode.window.showInformationMessage(
@@ -249,32 +254,47 @@ export async function initializeProject() {
       }
       const books = Object.keys(projectScope);
 
-      const overwriteConfirmation = await vscode.window.showWarningMessage(
-        "Do you want to overwrite any existing project files?",
-        { modal: true }, // This option ensures the dialog stays open until an explicit choice is made.
-        "Yes",
-        "No"
-      );
-      if (overwriteConfirmation === "Yes") {
-        vscode.window.showInformationMessage(
-          "Creating Codex Project with overwrite."
+      const codexFiles = await vscode.workspace.findFiles("**/*.codex");
+      let overwriteSelection = ConfirmationOptions.NotNeeded;
+
+      if (codexFiles.length > 0) {
+        const userChoice = await vscode.window.showWarningMessage(
+          "Do you want to overwrite any existing .codex project files?",
+          { modal: true }, // This option ensures the dialog stays open until an explicit choice is made.
+          ConfirmationOptions.Yes,
+          ConfirmationOptions.No
         );
-        await createProjectNotebooks({
-          shouldOverWrite: true,
-          books,
-        });
-        await createProjectCommentFiles({
-          shouldOverWrite: true,
-        });
-      } else if (overwriteConfirmation === "No") {
-        vscode.window.showInformationMessage(
-          "Creating Codex Project without overwrite."
-        );
-        await createProjectNotebooks({ books });
-        await createProjectCommentFiles({
-          shouldOverWrite: false,
-        });
+        overwriteSelection =
+          userChoice === ConfirmationOptions.Yes
+            ? ConfirmationOptions.Yes
+            : ConfirmationOptions.No;
       }
+
+      switch (overwriteSelection) {
+        case ConfirmationOptions.NotNeeded:
+          vscode.window.showInformationMessage("Creating Codex Project.");
+          break;
+        case ConfirmationOptions.Yes:
+          vscode.window.showInformationMessage(
+            "Creating Codex Project with overwrite."
+          );
+          break;
+        default:
+          vscode.window.showInformationMessage(
+            "Creating Codex Project without overwrite."
+          );
+          break;
+      }
+      const shouldOverWrite =
+        overwriteSelection === ConfirmationOptions.Yes ||
+        overwriteSelection === ConfirmationOptions.NotNeeded;
+      await createProjectNotebooks({
+        shouldOverWrite,
+        books,
+      });
+      await createProjectCommentFiles({
+        shouldOverWrite,
+      });
     } else {
       vscode.window.showInformationMessage("Project initialization cancelled.");
     }

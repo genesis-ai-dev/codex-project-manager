@@ -76,11 +76,11 @@
         "steps": [
           {
             "id": "openFolder",
-            "title": "Open Folder",
-            "description": "First, let's open a folder where your new Codex project will be initialized.\n[Open Folder](command:workbench.action.files.openFolder)",
+            "title": "Open Project Folder",
+            "description": "First, let's open a folder where your new Codex project will be initialized.\n[Open Project Folder](command:workbench.action.files.openFolder)",
             "media": {
               "image": "media/openFolder.png",
-              "altText": "Open Folder"
+              "altText": "Open Project Folder"
             },
             "completionEvents": [
               "onFolderSelected"
