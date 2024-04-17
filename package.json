@@ -41,6 +41,11 @@
         "command": "codex-project-manager.startWalkthrough",
         "title": "Start Walkthrough",
         "category": "Codex Project Management"
+      },
+      {
+        "command": "codex-project-manager.startTranslating",
+        "title": "Start Translating",
+        "category": "Codex Project Management"
       }
     ],
     "views": {
@@ -137,7 +142,7 @@
           {
             "id": "startTranslating",
             "title": "Start Translating",
-            "description": "Now that we have a folder, let's start translating your new Codex project.\n[Start Translating](command:codex-project-manager.startTranslating)",
+            "description": "Now that we've initialized all these files, let's start translating your new Codex project.\n[Start Translating](command:codex-project-manager.startTranslating)",
             "media": {
               "image": "./src/media/edit.png",
               "altText": "Start Translating"
@@ -225,5 +230,8 @@
   },
   "dependencies": {
     "codex-types": "^0.0.2"
-  }
+  },
+  "extensionDependencies": [
+    "project-accelerate.codex-editor-extension"
+  ]
 }

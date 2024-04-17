@@ -4,6 +4,7 @@ import {
   promptForProjectDetails,
   updateMetadataFile,
 } from "./utils/projectUtils";
+import { vrefData } from "./utils/verseRefUtils/verseData";
 import {
   checkForMissingFiles,
   downloadBible,
@@ -102,6 +103,24 @@ export async function activate(context: vscode.ExtensionContext) {
           "welcome.showWalkthrough",
           "codex-project-manager.codexWalkthrough"
         );
+      }
+    ),
+    // startTranslating opens a quick pick with the list of books in the source language
+    vscode.commands.registerCommand(
+      "codex-project-manager.startTranslating",
+      async () => {
+        const bookRefs = Object.keys(vrefData);
+        const bookNames = bookRefs.map((ref) => vrefData[ref].name);
+        const selectedBook = bookNames ?? vscode.window.showQuickPick(bookNames);
+        if (selectedBook) {
+          vscode.commands.executeCommand(
+            "workbench.view.extension.scripture-explorer-activity-bar",
+          );
+          vscode.commands.executeCommand("workbench.action.focusAuxiliaryBar");
+          vscode.commands.executeCommand(
+            "codex-editor.setEditorFontToTargetLanguage",
+          );
+        }
       }
     ),
     vscode.workspace.onDidChangeConfiguration((event) => {
