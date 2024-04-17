@@ -133,6 +133,18 @@
             "completionEvents": [
               "onCommand:codex-project-manager.initializeNewProject"
             ]
+          },
+          {
+            "id": "startTranslating",
+            "title": "Start Translating",
+            "description": "Now that we have a folder, let's start translating your new Codex project.\n[Start Translating](command:codex-project-manager.startTranslating)",
+            "media": {
+              "image": "./src/media/start-translating.png",
+              "altText": "Start Translating"
+            },
+            "completionEvents": [
+              "onCommand:codex-project-manager.startTranslating"
+            ]
           }
         ]
       }
