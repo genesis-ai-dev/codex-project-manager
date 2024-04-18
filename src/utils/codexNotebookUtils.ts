@@ -141,7 +141,7 @@ export async function createProjectNotebooks({
       )
       .then((notebookFile) => {
         // Save the notebook using generateFiles
-        const filePath = `drafts/target/${book}.codex`;
+        const filePath = `files/target/${book}.codex`;
         return generateFile({
           filepath: filePath,
           fileContent: notebookFile,
@@ -159,7 +159,7 @@ export async function createProjectCommentFiles({
 } = {}) {
   // Save the notebook using generateFiles
   const commentsFilePath = `comments.json`;
-  const notebookCommentsFilePath = `notebook-comments.json`;
+  const notebookCommentsFilePath = `file-comments.json`;
   await generateFile({
     filepath: commentsFilePath,
     fileContent: new TextEncoder().encode("[]"),

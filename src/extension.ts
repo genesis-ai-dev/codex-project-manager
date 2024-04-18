@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+
 import {
   ProjectDetails,
   promptForProjectDetails,
@@ -12,8 +13,10 @@ import {
   setSourceAndTargetLanguage,
   setTargetFont,
 } from "./utils/projectInitializers";
+import { migration_changeDraftFolderToFilesFolder } from "./utils/migartionUtils";
 
 export async function activate(context: vscode.ExtensionContext) {
+  await migration_changeDraftFolderToFilesFolder();
   console.log("Codex Project Manager is now active!");
   vscode.commands.registerCommand(
     "codex-project-manager.downloadSourceTextBibles",
@@ -27,9 +30,10 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "codex-project-manager.initializeNewProject",
       async () => {
-        // const projectDetails = await promptForProjectDetails();
-        // if (projectDetails) {
-        //   await updateProjectSettings(projectDetails);
+        const projectDetails = await promptForProjectDetails();
+        if (projectDetails) {
+          await updateProjectSettings(projectDetails);
+        }
         try {
           await initializeProject();
           await checkForMissingFiles();
@@ -111,14 +115,15 @@ export async function activate(context: vscode.ExtensionContext) {
       async () => {
         const bookRefs = Object.keys(vrefData);
         const bookNames = bookRefs.map((ref) => vrefData[ref].name);
-        const selectedBook = bookNames ?? vscode.window.showQuickPick(bookNames);
+        const selectedBook =
+          bookNames ?? vscode.window.showQuickPick(bookNames);
         if (selectedBook) {
           vscode.commands.executeCommand(
-            "workbench.view.extension.scripture-explorer-activity-bar",
+            "workbench.view.extension.scripture-explorer-activity-bar"
           );
           vscode.commands.executeCommand("workbench.action.focusAuxiliaryBar");
           vscode.commands.executeCommand(
-            "codex-editor.setEditorFontToTargetLanguage",
+            "codex-editor.setEditorFontToTargetLanguage"
           );
         }
       }
