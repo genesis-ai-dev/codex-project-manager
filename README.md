@@ -1,71 +1,43 @@
-# codex-project-manager README
+# Codex Project Manager
 
-This is the README for your extension "codex-project-manager". After writing up a brief description, we recommend including the following sections.
+The Codex Project Manager is an extension designed to streamline the process of initializing, configuring, and managing translation projects. This extension provides a suite of tools and features to assist users in setting up their projects with ease, ensuring that they can focus on the translation work without worrying about the underlying project setup.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- **Project Initialization**: Quickly set up a new translation project with predefined or custom templates.
+  - Command: `codex-project-manager.initializeNewProject`
 
-For example if there is an image subfolder under your extension project workspace:
+- **Project Configuration**: Easily configure project settings such as project name, source and target languages, and user information.
+  - Commands:
+    - `codex-project-manager.nameProject`
+    - `codex-project-manager.setSourceAndTargetLanguage`
+    - `codex-project-manager.userName`
 
-\!\[feature X\]\(images/feature-x.png\)
+- **Dependency Management**: Automatically checks for and suggests the installation of recommended extensions to enhance the project management experience.
+  - Recommended extension: `project-accelerate.codex-editor-extension`
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- **Walkthroughs and Guides**: Offers guided walkthroughs to help users get started with their projects and make the best use of the extension's features.
+  - Walkthroughs include steps like opening a project folder, naming the project, setting user name, and selecting source and target languages.
 
-## Requirements
+- **Integration with External Tools**: Provides commands to interact with other extensions and tools, such as downloading source texts and setting editor fonts to match the target language.
+  - Commands:
+    - `codex-project-manager.downloadSourceTextBibles`
+    - `codex-project-manager.setEditorFontToTargetLanguage`
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- **Project Management Utilities**: Includes utilities for checking missing project files, updating project settings, and more to ensure the project's integrity and consistency.
 
-## Extension Settings
+## Goals and Purpose
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+The primary goal of the Codex Project Manager extension is to simplify the initial setup and ongoing management of Bible translation projects. It aims to reduce the technical overhead for translators and project managers, allowing them to focus on the translation work itself.
 
-For example:
+## Related or Dependent Extensions
 
-This extension contributes the following settings:
+This extension relies on the following VS Code extension for enhanced functionality:
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+- **Codex Editor Extension** (`project-accelerate.codex-editor-extension`): Provides additional editing and management capabilities tailored for Bible translation projects.
 
-## Known Issues
+## Getting Started
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+To get started with the Codex Project Manager, install the extension from the Visual Studio Code Marketplace, and follow the on-screen walkthroughs to initialize and configure your new project.
 
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+**Enjoy your translation journey with Codex Project Manager!**

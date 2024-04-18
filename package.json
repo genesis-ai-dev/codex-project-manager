@@ -2,7 +2,10 @@
   "name": "codex-project-manager",
   "displayName": "Codex Project Manager",
   "description": "An extension to help users initialize different types of Bible translation projects.",
-  "version": "0.0.1",
+  "author": {
+    "name": "Ryder Wishart and Ben Scholtens"
+  },
+  "version": "0.0.2",
   "publisher": "project-accelerate",
   "homepage": "https://codex-editor.gitbook.io/",
   "license": "MIT",
@@ -11,7 +14,7 @@
     "url": "https://github.com/genesis-ai-dev/codex-project-manager"
   },
   "engines": {
-    "vscode": "^1.87.0"
+    "vscode": "^1.85.0"
   },
   "categories": [
     "Other"
@@ -216,7 +219,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.3",
     "@types/node": "18.x",
-    "@types/vscode": "^1.87.0",
+    "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "@vscode/test-electron": "^2.3.6",
