@@ -219,7 +219,9 @@ export async function createProjectNotebooks({
           )?.contents
       );
 
-      // console.log({ book, chapter });
+      if (projectFileContent && projectFileContent?.length > 0) {
+        console.log({ vrefsString });
+      }
       const projectFileContentFileThatMatchBook = projectFileContent?.find(
         (projectFile) =>
           projectFile.book.bookCode === book &&
@@ -227,6 +229,7 @@ export async function createProjectNotebooks({
             (projectBookChapter) => projectBookChapter.chapterNumber === chapter
           )
       );
+      console.log({ projectFileContentFileThatMatchBook });
       if (projectFileContent && projectFileContentFileThatMatchBook) {
         // hydrate vrefsString string from projectFileContentFileThatMatchBook
         // projectFileContent.map((chapter) => {
