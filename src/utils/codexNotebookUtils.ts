@@ -85,7 +85,7 @@ const importProjectAndConvertToJson = async (
     }
     for (const file of files) {
       if (path.extname(file) === ".SFM" || path.extname(file) === ".sfm") {
-        fs.readFile(
+       await fs.readFile(
           path.join(directoryPath, file),
           "utf8",
           async function (err: any, contents: any) {
