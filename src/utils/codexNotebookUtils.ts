@@ -1,11 +1,9 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import { CodexContentSerializer } from "./serializer";
-import { getProjectMetadata, getWorkSpaceFolder } from ".";
 import { generateFiles as generateFile } from "../utils/fileUtils";
 import { getAllBookRefs, getAllBookChapterRefs, getAllVrefs } from ".";
 import { vrefData } from "./verseRefUtils/verseData";
-import { LanguageProjectStatus } from "codex-types";
 import path from "path";
 import grammar from "usfm-grammar";
 
@@ -96,54 +94,7 @@ const importProjectAndConvertToJson = async (
 
         fileName = path.basename(file, path.extname(file)) + ".json";
         const jsonOutput = myUsfmParser.toJSON() as any as ParsedUSFM;
-        console.log({ jsonOutput });
         projectFileContent.push(jsonOutput);
-        // update matching codex file with the verseText content
-        // jsonOutput.chapters.map(async (chapter) => {
-        //   chapter.contents.map(async (content) => {
-        //     const codexFileName = `${jsonOutput.book.bookCode}.codex`;
-        //     const codexFileUri = vscode.Uri.file(codexFileName);
-        //     const codexNotebook =
-        //       await vscode.workspace.openNotebookDocument(codexFileUri);
-        //     if (!content.verseText) {
-        //       return;
-        //     }
-        //     const verseTextCell = new vscode.NotebookCellData(
-        //       vscode.NotebookCellKind.Code,
-        //       content.verseText,
-        //       "plaintext"
-        //     );
-        //     codexNotebook.cells.push(verseTextCell);
-        //     await vscode.workspace.applyEdit(
-        //       new vscode.WorkspaceEdit().replaceNotebookCells(
-        //         codexFileUri,
-        //         new vscode.NotebookRange(
-        //           codexNotebook.cells.length - 1,
-        //           codexNotebook.cells.length
-        //         ),
-        //         [verseTextCell]
-        //       )
-        //     );
-        //     // const codexFile =
-        //     //     vscode.workspace.fs.readFile(
-        //     //         codexFileUri,
-        //     //     );
-        //   });
-        // });
-
-        // await generateFiles({
-        //     filepath: `importedProject/${fileName}`,
-        //     fileContent:
-        //         new TextEncoder().encode(
-        //             JSON.stringify(
-        //                 jsonOutput,
-        //                 null,
-        //                 4,
-        //             ),
-        //         ),
-        //     shouldOverWrite:
-        //         true,
-        // });
       } catch (error) {
         vscode.window.showErrorMessage(
           `Error generating files for ${fileName}: ${error}`
@@ -151,7 +102,6 @@ const importProjectAndConvertToJson = async (
       }
     }
   }
-  console.log({ projectFileContent });
   return projectFileContent;
 };
 
@@ -171,7 +121,6 @@ export async function createProjectNotebooks({
       foldersWithUsfmToConvert
     );
   }
-  console.log({ projectFileContent, foldersWithUsfmToConvert });
 
   const allBooks = books ? books : getAllBookRefs();
   // Loop over all books and createCodexNotebook for each
@@ -206,15 +155,6 @@ export async function createProjectNotebooks({
       const verseRefText = importedBook?.chapters.find(
         (projectBookChapter) => projectBookChapter?.chapterNumber === chapter
       )?.contents;
-
-      console.log({
-        verseRefText,
-        importedBook,
-        book,
-        chapter,
-        projectFileContent: JSON.stringify(projectFileContent, null, 2),
-      });
-
       // Generate a code cell for the chapter
       const numberOfVrefsForChapter =
         vrefData[book].chapterVerseCountPairings[chapter];
@@ -225,29 +165,6 @@ export async function createProjectNotebooks({
         verseRefText
       );
 
-      if (projectFileContent && projectFileContent?.length > 0) {
-        console.log({ vrefsString });
-      }
-      const projectFileContentFileThatMatchBook = projectFileContent?.find(
-        (projectFile) =>
-          projectFile.book.bookCode === book &&
-          projectFile.chapters.findIndex(
-            (projectBookChapter) => projectBookChapter.chapterNumber === chapter
-          )
-      );
-      // console.log({ projectFileContentFileThatMatchBook });
-      if (projectFileContent && projectFileContentFileThatMatchBook) {
-        // hydrate vrefsString string from projectFileContentFileThatMatchBook
-        // projectFileContent.map((chapter) => {
-        //   if (chapter.book.bookCode === book && chapter.chapter === chapter) {
-        //     chapter.contents.map((content) => {
-        //       if (content.verseRef === vrefsString) {
-        //         vrefsString = content.verseText;
-        //       }
-        //     });
-        //   }
-        // });
-      }
       cells.push(
         new vscode.NotebookCellData(
           vscode.NotebookCellKind.Code,
