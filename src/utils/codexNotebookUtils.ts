@@ -204,13 +204,21 @@ export async function createProjectNotebooks({
         },
       };
       cells.push(cell);
-      const verseRefText = projectFileContent
-        ?.find((projectFile) => projectFile?.book?.bookCode === book)
-        ?.chapters.find(
-          (projectBookChapter) => projectBookChapter?.chapterNumber === chapter
-        )?.contents;
+      const importedBook = projectFileContent?.find(
+        (projectFile) => projectFile?.book?.bookCode === book
+      );
 
-      console.log({ verseRefText });
+      const verseRefText = importedBook?.chapters.find(
+        (projectBookChapter) => projectBookChapter?.chapterNumber === chapter
+      )?.contents;
+
+      console.log({
+        verseRefText,
+        importedBook,
+        book,
+        chapter,
+        projectFileContent,
+      });
       // Generate a code cell for the chapter
       const numberOfVrefsForChapter =
         vrefData[book].chapterVerseCountPairings[chapter];
