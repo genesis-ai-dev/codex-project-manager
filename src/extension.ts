@@ -15,6 +15,26 @@ import {
 } from "./utils/projectInitializers";
 import { migration_changeDraftFolderToFilesFolder } from "./utils/migartionUtils";
 
+const createProjectFiles = async ({
+  shouldImportUSFM,
+}: {
+  shouldImportUSFM: boolean;
+}) => {
+  const projectDetails = await promptForProjectDetails();
+  if (projectDetails) {
+    await updateProjectSettings(projectDetails);
+  }
+  try {
+    await initializeProject(shouldImportUSFM);
+    await checkForMissingFiles();
+  } catch (error) {
+    console.error(
+      "Error initializing project or checking for missing files:",
+      error
+    );
+  }
+};
+
 export async function activate(context: vscode.ExtensionContext) {
   await migration_changeDraftFolderToFilesFolder();
   console.log("Codex Project Manager is now active!");
@@ -30,24 +50,13 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "codex-project-manager.initializeNewProject",
       async () => {
-        const projectDetails = await promptForProjectDetails();
-        if (projectDetails) {
-          await updateProjectSettings(projectDetails);
-        }
-        try {
-          await initializeProject();
-          await checkForMissingFiles();
-        } catch (error) {
-          console.error(
-            "Error initializing project or checking for missing files:",
-            error
-          );
-        }
-        // }
-        // Here is where we need to think through seeding the project files... I guess we just seed them all, and
-        // ideally get a source text Bible (at least one?)
-        // While we do this, let's make OBS notebooks just because, or else leave a FIXME
-        // add something ??
+        await createProjectFiles({ shouldImportUSFM: false });
+      }
+    ),
+    vscode.commands.registerCommand(
+      "codex-project-manager.initializeImportProject",
+      async () => {
+        await createProjectFiles({ shouldImportUSFM: true });
       }
     ),
     vscode.commands.registerCommand(

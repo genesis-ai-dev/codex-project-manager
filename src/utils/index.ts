@@ -123,10 +123,17 @@ export function getAllBookChapterRefs(book: string): string[] {
 export function getAllVrefs(
   book: string,
   chapter: string,
-  numberOfVrefsForChapter: number
+  numberOfVrefsForChapter: number,
+  hydrationContent: UsfmVerseRefContent[] | undefined
 ): string {
   return Array.from(Array(numberOfVrefsForChapter).keys())
-    .map((_, i) => `${book} ${chapter}:${i + 1}`)
+    .map((_, i) => {
+      const verseText = hydrationContent?.find(
+        (verse) => parseInt(verse.verseNumber || "") === i + 1
+      )?.verseText;
+
+      return `${book} ${chapter}:${i + 1}${verseText ? " " + verseText : ""}`;
+    })
     .join("\n");
 }
 

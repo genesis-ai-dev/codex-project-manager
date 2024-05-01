@@ -133,7 +133,7 @@
           {
             "id": "initializeProject",
             "title": "Create files",
-            "description": "Now that we have a folder, let's initialize your new Codex project.\n[Initialize Project](command:codex-project-manager.initializeNewProject)",
+            "description": "Now that we have a folder, let's initialize your new Codex project.\n[Initialize Project](command:codex-project-manager.initializeNewProject)\n or \n [Import USFM Project](command:codex-project-manager.initializeImportProject)",
             "media": {
               "image": "./src/media/initialize-project.png",
               "altText": "Initialize Project"
@@ -232,7 +232,8 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "codex-types": "^0.0.2"
+    "codex-types": "^0.0.2",
+    "usfm-grammar": "^2.3.1"
   },
   "extensionDependencies": [
     "project-accelerate.codex-editor-extension"

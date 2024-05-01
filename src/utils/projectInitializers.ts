@@ -233,7 +233,7 @@ export async function setSourceAndTargetLanguage() {
   );
 }
 
-export async function initializeProject() {
+export async function initializeProject(shouldImportUSFM: boolean) {
   const workspaceFolder = vscode.workspace.workspaceFolders
     ? vscode.workspace.workspaceFolders[0]
     : undefined;
@@ -296,9 +296,23 @@ export async function initializeProject() {
     const shouldOverWrite =
       overwriteSelection === ConfirmationOptions.Yes ||
       overwriteSelection === ConfirmationOptions.NotNeeded;
+    let folderWithUsfmToConvert: vscode.Uri[] | undefined;
+    if (shouldImportUSFM) {
+      vscode.window
+        .showOpenDialog({
+          canSelectFolders: true,
+          canSelectFiles: false,
+          canSelectMany: false,
+          openLabel: "Choose USFM project folder",
+        })
+        .then((folderUri) => {
+          folderWithUsfmToConvert = folderUri;
+        });
+    }
     await createProjectNotebooks({
       shouldOverWrite,
       books,
+      foldersWithUsfmToConvert: folderWithUsfmToConvert,
     });
     await createProjectCommentFiles({
       shouldOverWrite,
