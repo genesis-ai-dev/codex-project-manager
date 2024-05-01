@@ -79,7 +79,7 @@ const importProjectAndConvertToJson = async (
 ): Promise<ParsedUSFM[]> => {
   const projectFileContent: ParsedUSFM[] = [];
   const directoryPath = folderWithUsfmToConvert[0].fsPath;
-  fs.readdir(directoryPath, async function (err: any, files: any) {
+  await fs.readdir(directoryPath, async function (err: any, files: any) {
     if (err) {
       return console.error("Unable to scan directory: " + err);
     }
