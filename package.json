@@ -133,7 +133,7 @@
           {
             "id": "initializeProject",
             "title": "Create files",
-            "description": "Now that we have a folder, let's initialize your new Codex project.\n[Initialize Project](command:codex-project-manager.initializeNewProject)\n or \n [Import USFM Project](command:codex-project-manager.initializeImportProject)",
+            "description": "Now that we have a folder, let's initialize your new Codex project.\n[Create New Project](command:codex-project-manager.initializeNewProject)\n or \n [Import USFM Project](command:codex-project-manager.initializeImportProject)",
             "media": {
               "image": "./src/media/initialize-project.png",
               "altText": "Initialize Project"
