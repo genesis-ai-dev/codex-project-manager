@@ -85,7 +85,7 @@ const importProjectAndConvertToJson = async (
     }
     for (const file of files) {
       if (path.extname(file) === ".SFM" || path.extname(file) === ".sfm") {
-       await fs.readFile(
+        await fs.readFile(
           path.join(directoryPath, file),
           "utf8",
           async function (err: any, contents: any) {
@@ -204,7 +204,13 @@ export async function createProjectNotebooks({
         },
       };
       cells.push(cell);
+      const verseRefText = projectFileContent
+        ?.find((projectFile) => projectFile?.book?.bookCode === book)
+        ?.chapters.find(
+          (projectBookChapter) => projectBookChapter?.chapterNumber === chapter
+        )?.contents;
 
+      console.log({ verseRefText });
       // Generate a code cell for the chapter
       const numberOfVrefsForChapter =
         vrefData[book].chapterVerseCountPairings[chapter];
@@ -212,11 +218,7 @@ export async function createProjectNotebooks({
         book,
         chapter,
         numberOfVrefsForChapter,
-        projectFileContent
-          ?.find((projectFile) => projectFile.book.bookCode === book)
-          ?.chapters.find(
-            (projectBookChapter) => projectBookChapter.chapterNumber === chapter
-          )?.contents
+        verseRefText
       );
 
       if (projectFileContent && projectFileContent?.length > 0) {
