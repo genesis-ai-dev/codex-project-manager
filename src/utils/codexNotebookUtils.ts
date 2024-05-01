@@ -89,13 +89,14 @@ const importProjectAndConvertToJson = async (
           path.join(directoryPath, file),
           "utf8",
           async function (err: any, contents: any) {
-            const myUsfmParser = new grammar.USFMParser(
-              contents,
-              grammar.LEVEL.RELAXED
-            );
-
-            const fileName = path.basename(file, path.extname(file)) + ".json";
+            let fileName = "";
             try {
+              const myUsfmParser = new grammar.USFMParser(
+                contents,
+                grammar.LEVEL.RELAXED
+              );
+
+              fileName = path.basename(file, path.extname(file)) + ".json";
               const jsonOutput = myUsfmParser.toJSON() as any as ParsedUSFM;
               console.log({ jsonOutput });
               projectFileContent.push(jsonOutput);
@@ -155,6 +156,7 @@ const importProjectAndConvertToJson = async (
       }
     }
   });
+  console.log({ projectFileContent });
   return projectFileContent;
 };
 
