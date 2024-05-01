@@ -296,7 +296,7 @@ export async function initializeProject(shouldImportUSFM: boolean) {
     const shouldOverWrite =
       overwriteSelection === ConfirmationOptions.Yes ||
       overwriteSelection === ConfirmationOptions.NotNeeded;
-    let folderWithUsfmToConvert: vscode.Uri[] | undefined;
+    let foldersWithUsfmToConvert: vscode.Uri[] | undefined;
     if (shouldImportUSFM) {
       vscode.window
         .showOpenDialog({
@@ -306,13 +306,13 @@ export async function initializeProject(shouldImportUSFM: boolean) {
           openLabel: "Choose USFM project folder",
         })
         .then((folderUri) => {
-          folderWithUsfmToConvert = folderUri;
+          foldersWithUsfmToConvert = folderUri;
         });
     }
     await createProjectNotebooks({
       shouldOverWrite,
       books,
-      foldersWithUsfmToConvert: folderWithUsfmToConvert,
+      foldersWithUsfmToConvert,
     });
     await createProjectCommentFiles({
       shouldOverWrite,

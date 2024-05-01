@@ -171,6 +171,7 @@ export async function createProjectNotebooks({
       foldersWithUsfmToConvert
     );
   }
+  console.log({ projectFileContent, foldersWithUsfmToConvert });
 
   const allBooks = books ? books : getAllBookRefs();
   // Loop over all books and createCodexNotebook for each
@@ -213,7 +214,7 @@ export async function createProjectNotebooks({
           )?.contents
       );
 
-      console.log({ projectFileContent, book, chapter });
+      console.log({ book, chapter });
       const projectFileContentFileThatMatchBook = projectFileContent?.find(
         (projectFile) =>
           projectFile.book.bookCode === book &&
