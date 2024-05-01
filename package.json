@@ -234,8 +234,5 @@
   "dependencies": {
     "codex-types": "^0.0.2",
     "usfm-grammar": "^2.3.1"
-  },
-  "extensionDependencies": [
-    "project-accelerate.codex-editor-extension"
-  ]
+  }
 }

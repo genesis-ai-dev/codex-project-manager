@@ -229,7 +229,7 @@ export async function createProjectNotebooks({
             (projectBookChapter) => projectBookChapter.chapterNumber === chapter
           )
       );
-      console.log({ projectFileContentFileThatMatchBook });
+      // console.log({ projectFileContentFileThatMatchBook });
       if (projectFileContent && projectFileContentFileThatMatchBook) {
         // hydrate vrefsString string from projectFileContentFileThatMatchBook
         // projectFileContent.map((chapter) => {
