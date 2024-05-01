@@ -79,83 +79,78 @@ const importProjectAndConvertToJson = async (
 ): Promise<ParsedUSFM[]> => {
   const projectFileContent: ParsedUSFM[] = [];
   const directoryPath = folderWithUsfmToConvert[0].fsPath;
-  await fs.readdir(directoryPath, async function (err: any, files: any) {
-    if (err) {
-      return console.error("Unable to scan directory: " + err);
-    }
-    for (const file of files) {
-      if (path.extname(file) === ".SFM" || path.extname(file) === ".sfm") {
-        await fs.readFile(
-          path.join(directoryPath, file),
-          "utf8",
-          async function (err: any, contents: any) {
-            let fileName = "";
-            try {
-              const myUsfmParser = new grammar.USFMParser(
-                contents,
-                grammar.LEVEL.RELAXED
-              );
+  const files = await fs.promises.readdir(directoryPath);
 
-              fileName = path.basename(file, path.extname(file)) + ".json";
-              const jsonOutput = myUsfmParser.toJSON() as any as ParsedUSFM;
-              console.log({ jsonOutput });
-              projectFileContent.push(jsonOutput);
-              // update matching codex file with the verseText content
-              // jsonOutput.chapters.map(async (chapter) => {
-              //   chapter.contents.map(async (content) => {
-              //     const codexFileName = `${jsonOutput.book.bookCode}.codex`;
-              //     const codexFileUri = vscode.Uri.file(codexFileName);
-              //     const codexNotebook =
-              //       await vscode.workspace.openNotebookDocument(codexFileUri);
-              //     if (!content.verseText) {
-              //       return;
-              //     }
-              //     const verseTextCell = new vscode.NotebookCellData(
-              //       vscode.NotebookCellKind.Code,
-              //       content.verseText,
-              //       "plaintext"
-              //     );
-              //     codexNotebook.cells.push(verseTextCell);
-              //     await vscode.workspace.applyEdit(
-              //       new vscode.WorkspaceEdit().replaceNotebookCells(
-              //         codexFileUri,
-              //         new vscode.NotebookRange(
-              //           codexNotebook.cells.length - 1,
-              //           codexNotebook.cells.length
-              //         ),
-              //         [verseTextCell]
-              //       )
-              //     );
-              //     // const codexFile =
-              //     //     vscode.workspace.fs.readFile(
-              //     //         codexFileUri,
-              //     //     );
-              //   });
-              // });
+  for (const file of files) {
+    if (path.extname(file) === ".SFM" || path.extname(file) === ".sfm") {
+      const contents = await fs.promises.readFile(
+        path.join(directoryPath, file),
+        "utf8"
+      );
+      let fileName = "";
+      try {
+        const myUsfmParser = new grammar.USFMParser(
+          contents,
+          grammar.LEVEL.RELAXED
+        );
 
-              // await generateFiles({
-              //     filepath: `importedProject/${fileName}`,
-              //     fileContent:
-              //         new TextEncoder().encode(
-              //             JSON.stringify(
-              //                 jsonOutput,
-              //                 null,
-              //                 4,
-              //             ),
-              //         ),
-              //     shouldOverWrite:
-              //         true,
-              // });
-            } catch (error) {
-              vscode.window.showErrorMessage(
-                `Error generating files for ${fileName}: ${error}`
-              );
-            }
-          }
+        fileName = path.basename(file, path.extname(file)) + ".json";
+        const jsonOutput = myUsfmParser.toJSON() as any as ParsedUSFM;
+        console.log({ jsonOutput });
+        projectFileContent.push(jsonOutput);
+        // update matching codex file with the verseText content
+        // jsonOutput.chapters.map(async (chapter) => {
+        //   chapter.contents.map(async (content) => {
+        //     const codexFileName = `${jsonOutput.book.bookCode}.codex`;
+        //     const codexFileUri = vscode.Uri.file(codexFileName);
+        //     const codexNotebook =
+        //       await vscode.workspace.openNotebookDocument(codexFileUri);
+        //     if (!content.verseText) {
+        //       return;
+        //     }
+        //     const verseTextCell = new vscode.NotebookCellData(
+        //       vscode.NotebookCellKind.Code,
+        //       content.verseText,
+        //       "plaintext"
+        //     );
+        //     codexNotebook.cells.push(verseTextCell);
+        //     await vscode.workspace.applyEdit(
+        //       new vscode.WorkspaceEdit().replaceNotebookCells(
+        //         codexFileUri,
+        //         new vscode.NotebookRange(
+        //           codexNotebook.cells.length - 1,
+        //           codexNotebook.cells.length
+        //         ),
+        //         [verseTextCell]
+        //       )
+        //     );
+        //     // const codexFile =
+        //     //     vscode.workspace.fs.readFile(
+        //     //         codexFileUri,
+        //     //     );
+        //   });
+        // });
+
+        // await generateFiles({
+        //     filepath: `importedProject/${fileName}`,
+        //     fileContent:
+        //         new TextEncoder().encode(
+        //             JSON.stringify(
+        //                 jsonOutput,
+        //                 null,
+        //                 4,
+        //             ),
+        //         ),
+        //     shouldOverWrite:
+        //         true,
+        // });
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `Error generating files for ${fileName}: ${error}`
         );
       }
     }
-  });
+  }
   console.log({ projectFileContent });
   return projectFileContent;
 };
