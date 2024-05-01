@@ -126,6 +126,9 @@ export function getAllVrefs(
   numberOfVrefsForChapter: number,
   hydrationContent: UsfmVerseRefContent[] | undefined
 ): string {
+  if (hydrationContent) {
+    console.log({ hydrationContent });
+  }
   return Array.from(Array(numberOfVrefsForChapter).keys())
     .map((_, i) => {
       const verseText = hydrationContent?.find(

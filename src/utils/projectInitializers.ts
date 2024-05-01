@@ -304,6 +304,7 @@ export async function initializeProject(shouldImportUSFM: boolean) {
         canSelectMany: false,
         openLabel: "Choose USFM project folder",
       });
+      console.log({ folderUri });
       foldersWithUsfmToConvert = folderUri;
     }
     await createProjectNotebooks({

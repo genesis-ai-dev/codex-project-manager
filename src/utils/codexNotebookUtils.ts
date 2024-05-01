@@ -97,6 +97,7 @@ const importProjectAndConvertToJson = async (
             const fileName = path.basename(file, path.extname(file)) + ".json";
             try {
               const jsonOutput = myUsfmParser.toJSON() as any as ParsedUSFM;
+              console.log({ jsonOutput });
               projectFileContent.push(jsonOutput);
               // update matching codex file with the verseText content
               // jsonOutput.chapters.map(async (chapter) => {
@@ -145,7 +146,9 @@ const importProjectAndConvertToJson = async (
               //         true,
               // });
             } catch (error) {
-              console.error("Error generating files for " + fileName, error);
+              vscode.window.showErrorMessage(
+                `Error generating files for ${fileName}: ${error}`
+              );
             }
           }
         );
@@ -214,7 +217,7 @@ export async function createProjectNotebooks({
           )?.contents
       );
 
-      console.log({ book, chapter });
+      // console.log({ book, chapter });
       const projectFileContentFileThatMatchBook = projectFileContent?.find(
         (projectFile) =>
           projectFile.book.bookCode === book &&
