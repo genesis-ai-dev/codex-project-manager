@@ -298,16 +298,13 @@ export async function initializeProject(shouldImportUSFM: boolean) {
       overwriteSelection === ConfirmationOptions.NotNeeded;
     let foldersWithUsfmToConvert: vscode.Uri[] | undefined;
     if (shouldImportUSFM) {
-      vscode.window
-        .showOpenDialog({
-          canSelectFolders: true,
-          canSelectFiles: false,
-          canSelectMany: false,
-          openLabel: "Choose USFM project folder",
-        })
-        .then((folderUri) => {
-          foldersWithUsfmToConvert = folderUri;
-        });
+      const folderUri = await vscode.window.showOpenDialog({
+        canSelectFolders: true,
+        canSelectFiles: false,
+        canSelectMany: false,
+        openLabel: "Choose USFM project folder",
+      });
+      foldersWithUsfmToConvert = folderUri;
     }
     await createProjectNotebooks({
       shouldOverWrite,
