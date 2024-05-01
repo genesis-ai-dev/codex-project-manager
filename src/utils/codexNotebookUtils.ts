@@ -217,8 +217,9 @@ export async function createProjectNotebooks({
         importedBook,
         book,
         chapter,
-        projectFileContent,
+        projectFileContent: JSON.stringify(projectFileContent, null, 2),
       });
+
       // Generate a code cell for the chapter
       const numberOfVrefsForChapter =
         vrefData[book].chapterVerseCountPairings[chapter];
