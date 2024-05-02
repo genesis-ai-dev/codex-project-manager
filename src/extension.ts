@@ -111,10 +111,15 @@ export async function activate(context: vscode.ExtensionContext) {
     ),
     vscode.commands.registerCommand(
       "codex-project-manager.startWalkthrough",
-      async () => {
+      () => {
         vscode.commands.executeCommand(
-          "welcome.showWalkthrough",
-          "codex-project-manager.codexWalkthrough"
+          "workbench.action.openWalkthrough",
+          {
+            category:
+              "project-accelerate.codex-project-manager#codexWalkthrough",
+            step: "project-accelerate.codex-project-manager#openFolder",
+          },
+          true
         );
       }
     ),
