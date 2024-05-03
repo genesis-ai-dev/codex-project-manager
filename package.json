@@ -24,6 +24,15 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "project-manager",
+          "title": "Project Manager",
+          "icon": "$(repo)"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "codex-project-manager.initializeNewProject",
@@ -52,6 +61,15 @@
       }
     ],
     "views": {
+      "project-manager": [
+        {
+          "type": "webview",
+          "id": "parallel-passages-sidebar",
+          "name": "Project Manager",
+          "icon": "$(repo)",
+          "contextualTitle": "Project Manager"
+        }
+      ],
       "explorer": [
         {
           "id": "codex-project-manager.welcomeView",
@@ -233,9 +251,7 @@
   },
   "dependencies": {
     "codex-types": "^0.0.2",
-    "usfm-grammar": "^2.3.1"
-  },
-  "extensionDependencies": [
-    "project-accelerate.codex-editor-extension"
-  ]
+    "usfm-grammar": "^2.3.1",
+    "@vscode/codicons": "^0.0.35"
+  }
 }

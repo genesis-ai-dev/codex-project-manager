@@ -14,6 +14,7 @@ import {
   setTargetFont,
 } from "./utils/projectInitializers";
 import { migration_changeDraftFolderToFilesFolder } from "./utils/migartionUtils";
+import { registerParallelViewWebviewProvider } from "./providers/parallelPassagesWebview/customParallelPassagesWebviewProvider";
 
 const createProjectFiles = async ({
   shouldImportUSFM,
@@ -36,6 +37,7 @@ const createProjectFiles = async ({
 };
 
 export async function activate(context: vscode.ExtensionContext) {
+  registerParallelViewWebviewProvider(context);
   await migration_changeDraftFolderToFilesFolder();
   console.log("Codex Project Manager is now active!");
   vscode.commands.registerCommand(
@@ -118,6 +120,20 @@ export async function activate(context: vscode.ExtensionContext) {
             category:
               "project-accelerate.codex-project-manager#codexWalkthrough",
             step: "project-accelerate.codex-project-manager#openFolder",
+          },
+          true
+        );
+      }
+    ),
+    vscode.commands.registerCommand(
+      "codex-project-manager.editProjectSettings",
+      () => {
+        vscode.commands.executeCommand(
+          "workbench.action.openWalkthrough",
+          {
+            category:
+              "project-accelerate.codex-project-manager#codexWalkthrough",
+            step: "projectName",
           },
           true
         );
