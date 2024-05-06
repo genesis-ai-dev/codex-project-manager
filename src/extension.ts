@@ -14,8 +14,30 @@ import {
   setTargetFont,
 } from "./utils/projectInitializers";
 import { migration_changeDraftFolderToFilesFolder } from "./utils/migartionUtils";
+import { registerParallelViewWebviewProvider } from "./providers/parallelPassagesWebview/customParallelPassagesWebviewProvider";
+
+const createProjectFiles = async ({
+  shouldImportUSFM,
+}: {
+  shouldImportUSFM: boolean;
+}) => {
+  const projectDetails = await promptForProjectDetails();
+  if (projectDetails) {
+    await updateProjectSettings(projectDetails);
+  }
+  try {
+    await initializeProject(shouldImportUSFM);
+    await checkForMissingFiles();
+  } catch (error) {
+    console.error(
+      "Error initializing project or checking for missing files:",
+      error
+    );
+  }
+};
 
 export async function activate(context: vscode.ExtensionContext) {
+  registerParallelViewWebviewProvider(context);
   await migration_changeDraftFolderToFilesFolder();
   console.log("Codex Project Manager is now active!");
   vscode.commands.registerCommand(
@@ -30,24 +52,13 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "codex-project-manager.initializeNewProject",
       async () => {
-        const projectDetails = await promptForProjectDetails();
-        if (projectDetails) {
-          await updateProjectSettings(projectDetails);
-        }
-        try {
-          await initializeProject();
-          await checkForMissingFiles();
-        } catch (error) {
-          console.error(
-            "Error initializing project or checking for missing files:",
-            error
-          );
-        }
-        // }
-        // Here is where we need to think through seeding the project files... I guess we just seed them all, and
-        // ideally get a source text Bible (at least one?)
-        // While we do this, let's make OBS notebooks just because, or else leave a FIXME
-        // add something ??
+        await createProjectFiles({ shouldImportUSFM: false });
+      }
+    ),
+    vscode.commands.registerCommand(
+      "codex-project-manager.initializeImportProject",
+      async () => {
+        await createProjectFiles({ shouldImportUSFM: true });
       }
     ),
     vscode.commands.registerCommand(
@@ -102,10 +113,29 @@ export async function activate(context: vscode.ExtensionContext) {
     ),
     vscode.commands.registerCommand(
       "codex-project-manager.startWalkthrough",
-      async () => {
+      () => {
         vscode.commands.executeCommand(
-          "welcome.showWalkthrough",
-          "codex-project-manager.codexWalkthrough"
+          "workbench.action.openWalkthrough",
+          {
+            category:
+              "project-accelerate.codex-project-manager#codexWalkthrough",
+            step: "project-accelerate.codex-project-manager#openFolder",
+          },
+          true
+        );
+      }
+    ),
+    vscode.commands.registerCommand(
+      "codex-project-manager.editProjectSettings",
+      () => {
+        vscode.commands.executeCommand(
+          "workbench.action.openWalkthrough",
+          {
+            category:
+              "project-accelerate.codex-project-manager#codexWalkthrough",
+            step: "projectName",
+          },
+          true
         );
       }
     ),

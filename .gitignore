@@ -7,3 +7,6 @@ node_modules
 /comments.json
 /pnpm-lock.yaml
 /src/.DS_Store
+.DS_Store
+package-lock.json
+
