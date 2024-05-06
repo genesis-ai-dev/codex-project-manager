@@ -1,0 +1,40 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "useDefineForClassFields": true,
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        "module": "ESNext",
+        "skipLibCheck": true,
+
+        /* Bundler mode */
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx",
+
+        /* Linting */
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": true
+    },
+    "exclude": ["build"],
+    "include": [
+        "src/*",
+        "../types/index.d.ts",
+        "src/ChatView/ChatView.tsx",
+        "src/ChatView/index.tsx",
+        "src/ScriptureViewer/ScriptureViewer.tsx",
+        "src/ScriptureViewer/index.tsx",
+        "src/CommentsView/CommentsView.tsx",
+        "src/ParallelView/ParallelView.tsx",
+        "src/SmartView/SmartView.tsx",
+        "src/ParallelView/index.tsx",
+        "src/SemanticView/SemanticView.tsx",
+        "src/SemanticView/index.tsx"
+    ],
+    "references": [{ "path": "./tsconfig.node.json" }]
+}

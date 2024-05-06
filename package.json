@@ -24,6 +24,15 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "project-manager",
+          "title": "Project Manager",
+          "icon": "$(repo)"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "codex-project-manager.initializeNewProject",
@@ -52,6 +61,15 @@
       }
     ],
     "views": {
+      "project-manager": [
+        {
+          "type": "webview",
+          "id": "parallel-passages-sidebar",
+          "name": "Project Manager",
+          "icon": "$(repo)",
+          "contextualTitle": "Project Manager"
+        }
+      ],
       "explorer": [
         {
           "id": "codex-project-manager.welcomeView",
@@ -133,7 +151,7 @@
           {
             "id": "initializeProject",
             "title": "Create files",
-            "description": "Now that we have a folder, let's initialize your new Codex project.\n[Initialize Project](command:codex-project-manager.initializeNewProject)",
+            "description": "Now that we have a folder, let's initialize your new Codex project.\n[Create New Project](command:codex-project-manager.initializeNewProject)\n or \n [Import USFM Project](command:codex-project-manager.initializeImportProject)",
             "media": {
               "image": "./src/media/initialize-project.png",
               "altText": "Initialize Project"
@@ -232,9 +250,8 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "codex-types": "^0.0.2"
-  },
-  "extensionDependencies": [
-    "project-accelerate.codex-editor-extension"
-  ]
+    "codex-types": "^0.0.2",
+    "usfm-grammar": "^2.3.1",
+    "@vscode/codicons": "^0.0.35"
+  }
 }
