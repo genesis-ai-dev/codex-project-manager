@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import { CodexContentSerializer } from "./serializer";
+import { getProjectMetadata, getWorkSpaceFolder } from ".";
 import { generateFiles as generateFile } from "../utils/fileUtils";
 import { getAllBookRefs, getAllBookChapterRefs, getAllVrefs } from ".";
 import { vrefData } from "./verseRefUtils/verseData";
-import path from "path";
-import grammar from "usfm-grammar";
+import { LanguageProjectStatus } from "codex-types";
 
 export const NOTEBOOK_TYPE = "codex-type";
 export enum CellTypes {
@@ -71,61 +71,14 @@ export const createCodexNotebook = async (
  * @param {string[]} options.books - An array of book names for which to create notebooks. If not provided, notebooks will be created for all books.
  * @returns {Promise<void>} A promise that resolves when all notebooks have been created.
  */
-
-const importProjectAndConvertToJson = async (
-  folderWithUsfmToConvert: vscode.Uri[]
-): Promise<ParsedUSFM[]> => {
-  const projectFileContent: ParsedUSFM[] = [];
-  const directoryPath = folderWithUsfmToConvert[0].fsPath;
-  const files = await fs.promises.readdir(directoryPath);
-
-  for (const file of files) {
-    if (
-      path.extname(file) === ".SFM" ||
-      path.extname(file) === ".sfm" ||
-      path.extname(file) === ".USFM" ||
-      path.extname(file) === ".usfm"
-    ) {
-      const contents = await fs.promises.readFile(
-        path.join(directoryPath, file),
-        "utf8"
-      );
-      let fileName = "";
-      try {
-        const myUsfmParser = new grammar.USFMParser(
-          contents,
-          grammar.LEVEL.RELAXED
-        );
-
-        fileName = path.basename(file, path.extname(file)) + ".json";
-        const jsonOutput = myUsfmParser.toJSON() as any as ParsedUSFM;
-        projectFileContent.push(jsonOutput);
-      } catch (error) {
-        vscode.window.showErrorMessage(
-          `Error generating files for ${fileName}: ${error}`
-        );
-      }
-    }
-  }
-  return projectFileContent;
-};
-
 export async function createProjectNotebooks({
   shouldOverWrite = false,
   books = undefined,
-  foldersWithUsfmToConvert = undefined,
 }: {
   shouldOverWrite?: boolean;
   books?: string[] | undefined;
-  foldersWithUsfmToConvert?: vscode.Uri[] | undefined;
 } = {}) {
   const notebookCreationPromises = [];
-  let projectFileContent: ParsedUSFM[] | undefined = undefined;
-  if (foldersWithUsfmToConvert) {
-    projectFileContent = await importProjectAndConvertToJson(
-      foldersWithUsfmToConvert
-    );
-  }
 
   const allBooks = books ? books : getAllBookRefs();
   // Loop over all books and createCodexNotebook for each
@@ -153,22 +106,11 @@ export async function createProjectNotebooks({
         },
       };
       cells.push(cell);
-      const importedBook = projectFileContent?.find(
-        (projectFile) => projectFile?.book?.bookCode === book
-      );
 
-      const verseRefText = importedBook?.chapters.find(
-        (projectBookChapter) => projectBookChapter?.chapterNumber === chapter
-      )?.contents;
       // Generate a code cell for the chapter
       const numberOfVrefsForChapter =
         vrefData[book].chapterVerseCountPairings[chapter];
-      const vrefsString = getAllVrefs(
-        book,
-        chapter,
-        numberOfVrefsForChapter,
-        verseRefText
-      );
+      const vrefsString = getAllVrefs(book, chapter, numberOfVrefsForChapter);
 
       cells.push(
         new vscode.NotebookCellData(
@@ -191,7 +133,7 @@ export async function createProjectNotebooks({
     const serializer = new CodexContentSerializer();
     const notebookData = new vscode.NotebookData(cells);
 
-    // const project = await getProjectMetadata();
+    const project = await getProjectMetadata();
     const notebookCreationPromise = serializer
       .serializeNotebook(
         notebookData,
