@@ -129,6 +129,7 @@ function App() {
           flexDirection: "column",
           height: "100%",
           width: "100%",
+          padding: "0 2rem",
         }}
       >
         <AccountButton
@@ -159,7 +160,7 @@ function App() {
           buttonDescriptionText="Change Source Language"
         />
         <AccountButton
-          iconClass="codicon-pass"
+          iconClass="codicon-globe"
           onClick={() =>
             vscode.postMessage({
               command: "changeTargetLanguage",

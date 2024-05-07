@@ -3,11 +3,10 @@
 */**
 
 # Allowlist what we need
-!out/**
-!assets/**
-!servers/**
+!dist/**
 
-!webviews//dist/**
+
+!webviews/dist/**
 
 !src/media/**
 !src/assets/reset.css
