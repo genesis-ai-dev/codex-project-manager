@@ -130,16 +130,16 @@ export async function activate(context: vscode.ExtensionContext) {
     // ),
     vscode.commands.registerCommand(
       "codex-project-manager.nameProject",
-      async () => {
-        const settingUri = vscode.Uri.file(
-          vscode.workspace.getConfiguration().get("settings.json") || ""
-        );
-        await vscode.commands.executeCommand("vscode.open", settingUri, {
-          viewColumn: vscode.ViewColumn.Beside,
-        });
-        // await vscode.commands.executeCommand(
-        //   "workbench.action.closeActiveEditor"
-        // );
+      async (commandOnly: boolean = false) => {
+        if (!commandOnly) {
+          const settingUri = vscode.Uri.file(
+            vscode.workspace.getConfiguration().get("settings.json") || ""
+          );
+          await vscode.commands.executeCommand("vscode.open", settingUri, {
+            viewColumn: vscode.ViewColumn.Beside,
+          });
+        }
+
         await vscode.commands.executeCommand(
           "workbench.action.openWorkspaceSettings",
           "@ext:project-accelerate.codex-project-manager codex-project-manager.projectName"
@@ -148,13 +148,15 @@ export async function activate(context: vscode.ExtensionContext) {
     ),
     vscode.commands.registerCommand(
       "codex-project-manager.userName",
-      async () => {
-        const settingUri = vscode.Uri.file(
-          vscode.workspace.getConfiguration().get("settings.json") || ""
-        );
-        await vscode.commands.executeCommand("vscode.open", settingUri, {
-          viewColumn: vscode.ViewColumn.Beside,
-        });
+      async (commandOnly: boolean = false) => {
+        if (!commandOnly) {
+          const settingUri = vscode.Uri.file(
+            vscode.workspace.getConfiguration().get("settings.json") || ""
+          );
+          await vscode.commands.executeCommand("vscode.open", settingUri, {
+            viewColumn: vscode.ViewColumn.Beside,
+          });
+        }
         // await vscode.commands.executeCommand(
         //   "workbench.action.closeActiveEditor"
         // );

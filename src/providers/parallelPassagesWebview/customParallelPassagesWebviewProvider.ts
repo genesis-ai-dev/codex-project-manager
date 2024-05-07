@@ -145,6 +145,26 @@ const loadWebviewHtml = (
           "codex-project-manager.editProjectSettings"
         );
         break;
+      case "renameProject":
+        vscode.commands.executeCommand(
+          "codex-project-manager.nameProject",
+          true
+        );
+        break;
+      case "changeUserName":
+        vscode.commands.executeCommand("codex-project-manager.userName", true);
+        break;
+      case "changeSourceLanguage":
+        console.log("changeSourceLanguage called");
+        vscode.commands.executeCommand(
+          "codex-project-manager.promptUserForSourceLanguage"
+        );
+        break;
+      case "changeTargetLanguage":
+        vscode.commands.executeCommand(
+          "codex-project-manager.promptUserForTargetLanguage"
+        );
+        break;
       default:
         console.error(`Unknown command: ${message.command}`);
     }
@@ -177,7 +197,7 @@ export function registerProjectManagerViewWebviewProvider(
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
-      "parallel-passages-sidebar",
+      "project-manager-sidebar",
       new CustomWebviewProvider(context)
     )
   );

@@ -29,7 +29,7 @@
         {
           "id": "project-manager",
           "title": "Project Manager",
-          "icon": "$(repo)"
+          "icon": "$(tools)"
         }
       ]
     },
@@ -64,9 +64,9 @@
       "project-manager": [
         {
           "type": "webview",
-          "id": "parallel-passages-sidebar",
+          "id": "project-manager-sidebar",
           "name": "Project Manager",
-          "icon": "$(repo)",
+          "icon": "$(tools)",
           "contextualTitle": "Project Manager"
         }
       ],
