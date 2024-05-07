@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-var-requires */
 //@ts-check
 
 "use strict";
@@ -26,6 +28,9 @@ const extensionConfig = {
   resolve: {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
     extensions: [".ts", ".js"],
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+    },
   },
   module: {
     rules: [
@@ -35,6 +40,21 @@ const extensionConfig = {
         use: [
           {
             loader: "ts-loader",
+          },
+        ],
+      },
+      {
+        test: /\.md$/,
+        use: [
+          {
+            loader: "html-loader",
+          },
+          {
+            loader: "markdown-loader",
+            options: {
+              // Pass options to marked
+              // See https://marked.js.org/using_advanced#options
+            },
           },
         ],
       },

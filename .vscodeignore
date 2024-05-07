@@ -1,12 +1,21 @@
-.vscode/**
-.vscode-test/**
-out/**
-node_modules/**
-.gitignore
-.yarnrc
-webpack.config.js
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/.eslintrc.json
-**/*.map
-**/*.ts
+# Ignore everything
+*
+*/**
+
+# Allowlist what we need
+!out/**
+!assets/**
+!servers/**
+
+!webviews//dist/**
+
+!src/media/**
+!src/assets/reset.css
+!src/assets/vscode.css
+!**/*.svg
+!node_modules/@vscode/codicons/dist/**
+
+!CHANGELOG.md
+!LICENSE
+!package*.json
+!README.md
