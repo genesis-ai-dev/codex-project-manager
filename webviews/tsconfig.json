@@ -30,9 +30,9 @@
         "src/ScriptureViewer/ScriptureViewer.tsx",
         "src/ScriptureViewer/index.tsx",
         "src/CommentsView/CommentsView.tsx",
-        "src/ParallelView/ParallelView.tsx",
+        "src/ProjectManagerView/ProjectManagerView.tsx",
         "src/SmartView/SmartView.tsx",
-        "src/ParallelView/index.tsx",
+        "src/ProjectManagerView/index.tsx",
         "src/SemanticView/SemanticView.tsx",
         "src/SemanticView/index.tsx"
     ],

@@ -9,63 +9,14 @@ export interface ProjectDetails {
   projectCategory?: string;
   userName?: string;
   abbreviation?: string;
-  sourceLanguage: LanguageMetadata;
-  targetLanguage: LanguageMetadata;
+  sourceLanguage?: LanguageMetadata;
+  targetLanguage?: LanguageMetadata;
 }
 
-export async function promptForProjectDetails(): Promise<
+export async function promptForTargetLanguage(): Promise<
   ProjectDetails | undefined
 > {
-  // Prompt user for project details and return them
-
-  //   const projectCategory = await vscode.window.showQuickPick(
-  //     ["Scripture", "Gloss", "Parascriptural", "Peripheral"],
-  //     { placeHolder: "Select the project category" }
-  //   );
-  //   if (!projectCategory) {
-  //     return;
-  //   }
-
-  //   const projectName = await vscode.window.showInputBox({
-  //     prompt: "Enter the project name",
-  //   });
-  //   if (!projectName) {
-  //     return;
-  //   }
-
-  //   const userName = await vscode.window.showInputBox({
-  //     prompt: "Enter your username",
-  //   });
-  //   if (!userName) {
-  //     return;
-  //   }
-
-  //   const abbreviation = await vscode.window.showInputBox({
-  //     prompt: "Enter the project abbreviation",
-  //     placeHolder: "e.g. KJV, NASB, RSV, etc.",
-  //   });
-  //   if (!abbreviation) {
-  //     return;
-  //   }
   const languages = LanguageCodes;
-  const sourceLanguagePick = await vscode.window.showQuickPick(
-    languages.map((lang: LanguageMetadata) => `${lang.refName} (${lang.tag})`),
-    {
-      placeHolder: "Select the source language",
-    }
-  );
-  if (!sourceLanguagePick) {
-    return;
-  }
-
-  const sourceLanguage = languages.find(
-    (lang: LanguageMetadata) =>
-      `${lang.refName} (${lang.tag})` === sourceLanguagePick
-  );
-  if (!sourceLanguage) {
-    return;
-  }
-
   const targetLanguagePick = await vscode.window.showQuickPick(
     languages.map((lang: LanguageMetadata) => `${lang.refName} (${lang.tag})`),
     {
@@ -85,8 +36,36 @@ export async function promptForProjectDetails(): Promise<
   }
 
   // Add project status to the selected languages
-  sourceLanguage.projectStatus = LanguageProjectStatus.SOURCE;
   targetLanguage.projectStatus = LanguageProjectStatus.TARGET;
+
+  return {
+    targetLanguage,
+  };
+}
+export async function promptForSourceLanguage(): Promise<
+  ProjectDetails | undefined
+> {
+  const languages = LanguageCodes;
+  const sourceLanguagePick = await vscode.window.showQuickPick(
+    languages.map((lang: LanguageMetadata) => `${lang.refName} (${lang.tag})`),
+    {
+      placeHolder: "Select the source language",
+    }
+  );
+  if (!sourceLanguagePick) {
+    return;
+  }
+
+  const sourceLanguage = languages.find(
+    (lang: LanguageMetadata) =>
+      `${lang.refName} (${lang.tag})` === sourceLanguagePick
+  );
+  if (!sourceLanguage) {
+    return;
+  }
+
+  // Add project status to the selected languages
+  sourceLanguage.projectStatus = LanguageProjectStatus.SOURCE;
 
   return {
     // projectName,
@@ -94,7 +73,6 @@ export async function promptForProjectDetails(): Promise<
     // userName,
     // abbreviation,
     sourceLanguage,
-    targetLanguage,
   };
 }
 
@@ -183,8 +161,12 @@ export async function initializeProjectMetadata(details: ProjectDetails) {
     },
   };
 
-  newProject.languages.push(details.sourceLanguage);
-  newProject.languages.push(details.targetLanguage);
+  if (details.sourceLanguage) {
+    newProject.languages.push(details.sourceLanguage);
+  }
+  if (details.targetLanguage) {
+    newProject.languages.push(details.targetLanguage);
+  }
 
   const workspaceFolder = vscode.workspace.workspaceFolders
     ? vscode.workspace.workspaceFolders[0].uri.fsPath

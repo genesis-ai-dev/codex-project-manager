@@ -78,7 +78,7 @@ const loadWebviewHtml = (
       extensionUri,
       "webviews",
       "dist",
-      "ParallelView",
+      "ProjectManagerView",
       "index.js"
     )
   );
@@ -87,7 +87,7 @@ const loadWebviewHtml = (
       extensionUri,
       "webviews",
       "dist",
-      "ParallelView",
+      "ProjectManagerView",
       "index.css"
     )
   );
@@ -168,7 +168,7 @@ export class CustomWebviewProvider {
   }
 }
 
-export function registerParallelViewWebviewProvider(
+export function registerProjectManagerViewWebviewProvider(
   context: vscode.ExtensionContext
 ) {
   const item = vscode.window.createStatusBarItem(

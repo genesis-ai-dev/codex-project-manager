@@ -8,7 +8,9 @@ import { LanguageProjectStatus } from "codex-types";
 import {
   ProjectDetails,
   initializeProjectMetadata,
-  promptForProjectDetails,
+  // promptForProjectDetails,
+  promptForSourceLanguage,
+  promptForTargetLanguage,
 } from "../utils/projectUtils";
 // import {
 //     indexVerseRefsInSourceText,
@@ -198,40 +200,73 @@ enum ConfirmationOptions {
   NotNeeded = "Not-Needed",
 }
 
-export async function setSourceAndTargetLanguage() {
-  const workspaceFolder = vscode.workspace.workspaceFolders
-    ? vscode.workspace.workspaceFolders[0]
-    : undefined;
-  if (!workspaceFolder) {
-    console.error(
-      "No workspace folder found. Please open a folder to store your project in."
-    );
-    return;
-  }
+// export async function setSourceAndTargetLanguage() {
+//   const workspaceFolder = vscode.workspace.workspaceFolders
+//     ? vscode.workspace.workspaceFolders[0]
+//     : undefined;
+//   if (!workspaceFolder) {
+//     console.error(
+//       "No workspace folder found. Please open a folder to store your project in."
+//     );
+//     return;
+//   }
 
-  vscode.window.showInformationMessage("Initializing new project...");
-  try {
-    const projectDetails = await promptForProjectDetails();
-    if (projectDetails) {
-      const newProject = await initializeProjectMetadata(projectDetails);
-      vscode.window.showInformationMessage(
-        `New project initialized: ${newProject?.meta.generator.userName}'s ${newProject?.meta.category}`
-      );
-    } else {
-      vscode.window.showInformationMessage("Project initialization cancelled.");
-    }
-  } catch (error) {
-    vscode.window.showErrorMessage(
-      `Failed to initialize new project: ${error}`
-    );
-  }
-  await vscode.commands.executeCommand(
-    "codex-project-manager.setEditorFontToTargetLanguage"
-  );
-  await vscode.commands.executeCommand(
-    "codex-project-manager.downloadSourceTextBibles"
-  );
-}
+//   vscode.window.showInformationMessage("Initializing new project...");
+//   try {
+//     const projectDetails = await promptForProjectDetails();
+//     if (projectDetails) {
+//       const newProject = await initializeProjectMetadata(projectDetails);
+//       vscode.window.showInformationMessage(
+//         `New project initialized: ${newProject?.meta.generator.userName}'s ${newProject?.meta.category}`
+//       );
+//     } else {
+//       vscode.window.showInformationMessage("Project initialization cancelled.");
+//     }
+//   } catch (error) {
+//     vscode.window.showErrorMessage(
+//       `Failed to initialize new project: ${error}`
+//     );
+//   }
+//   await vscode.commands.executeCommand(
+//     "codex-project-manager.setEditorFontToTargetLanguage"
+//   );
+//   await vscode.commands.executeCommand(
+//     "codex-project-manager.downloadSourceTextBibles"
+//   );
+// }
+// export async function setSourceLanguage() {
+//   const workspaceFolder = vscode.workspace.workspaceFolders
+//     ? vscode.workspace.workspaceFolders[0]
+//     : undefined;
+//   if (!workspaceFolder) {
+//     vscode.window.showErrorMessage(
+//       "No workspace folder found. Please open a folder to store your project in."
+//     );
+//     return;
+//   }
+
+//   try {
+//     const projectDetails = await promptForSourceLanguage();
+//     if (projectDetails) {
+//       const newProject = await initializeProjectMetadata(projectDetails);
+//       vscode.window.showInformationMessage(
+//         `New project initialized: ${newProject?.meta.generator.userName}'s ${newProject?.meta.category}`
+//       );
+//     } else {
+//       vscode.window.showInformationMessage("Project initialization cancelled.");
+//     }
+//   } catch (error) {
+//     vscode.window.showErrorMessage(
+//       `Failed to initialize new project: ${error}`
+//     );
+//   }
+//   await vscode.commands.executeCommand(
+//     "codex-project-manager.setEditorFontToTargetLanguage"
+//   );
+//   await vscode.commands.executeCommand(
+//     "codex-project-manager.downloadSourceTextBibles"
+//   );
+// }
 
 export async function initializeProject(shouldImportUSFM: boolean) {
   const workspaceFolder = vscode.workspace.workspaceFolders

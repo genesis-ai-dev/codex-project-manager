@@ -23,12 +23,6 @@ function App() {
     };
   }, []);
 
-  const openProjectSettings = () => {
-    vscode.postMessage({
-      command: "openProjectSettings",
-    });
-  };
-
   return (
     <div
       style={{
@@ -48,10 +42,44 @@ function App() {
         }}
       ></i>
       <VSCodeButton
-        onClick={() => openProjectSettings()}
+        onClick={() =>
+          vscode.postMessage({
+            command: "renameProject",
+          })
+        }
         style={{ marginBottom: "10vh" }}
       >
-        Open Project Settings
+        Rename Project
+      </VSCodeButton>
+      <VSCodeButton
+        onClick={() =>
+          vscode.postMessage({
+            command: "changeUserName",
+          })
+        }
+        style={{ marginBottom: "10vh" }}
+      >
+        Change User Name
+      </VSCodeButton>
+      <VSCodeButton
+        onClick={() =>
+          vscode.postMessage({
+            command: "changeSourceLanguage",
+          })
+        }
+        style={{ marginBottom: "10vh" }}
+      >
+        Change Source Language
+      </VSCodeButton>
+      <VSCodeButton
+        onClick={() =>
+          vscode.postMessage({
+            command: "changeTargetLanguage",
+          })
+        }
+        style={{ marginBottom: "10vh" }}
+      >
+        Change Target Language
       </VSCodeButton>
     </div>
   );

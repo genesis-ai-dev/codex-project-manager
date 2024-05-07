@@ -2,7 +2,9 @@ import * as vscode from "vscode";
 
 import {
   ProjectDetails,
-  promptForProjectDetails,
+  // promptForProjectDetails,
+  promptForTargetLanguage,
+  promptForSourceLanguage,
   updateMetadataFile,
 } from "./utils/projectUtils";
 import { vrefData } from "./utils/verseRefUtils/verseData";
@@ -10,21 +12,18 @@ import {
   checkForMissingFiles,
   downloadBible,
   initializeProject,
-  setSourceAndTargetLanguage,
+  // setSourceAndTargetLanguage,
   setTargetFont,
 } from "./utils/projectInitializers";
 import { migration_changeDraftFolderToFilesFolder } from "./utils/migartionUtils";
-import { registerParallelViewWebviewProvider } from "./providers/parallelPassagesWebview/customParallelPassagesWebviewProvider";
+import { registerProjectManagerViewWebviewProvider } from "./providers/parallelPassagesWebview/customParallelPassagesWebviewProvider";
 
 const createProjectFiles = async ({
   shouldImportUSFM,
 }: {
   shouldImportUSFM: boolean;
 }) => {
-  const projectDetails = await promptForProjectDetails();
-  if (projectDetails) {
-    await updateProjectSettings(projectDetails);
-  }
+  // const projectDetails = await promptForProjectDetails();
   try {
     await initializeProject(shouldImportUSFM);
     await checkForMissingFiles();
@@ -37,7 +36,7 @@ const createProjectFiles = async ({
 };
 
 export async function activate(context: vscode.ExtensionContext) {
-  registerParallelViewWebviewProvider(context);
+  registerProjectManagerViewWebviewProvider(context);
   await migration_changeDraftFolderToFilesFolder();
   console.log("Codex Project Manager is now active!");
   vscode.commands.registerCommand(
@@ -50,6 +49,68 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   context.subscriptions.push(
     vscode.commands.registerCommand(
+      "codex-project-manager.promptUserForTargetLanguage",
+      async () => {
+        const config = vscode.workspace.getConfiguration();
+        const existingTargetLanguage = config.get("targetLanguage") as any;
+        console.log("existingTargetLanguage", existingTargetLanguage);
+        if (existingTargetLanguage) {
+          const overwrite = await vscode.window.showWarningMessage(
+            `The target language is already set to ${existingTargetLanguage.refName}. Do you want to overwrite it?`,
+            "Yes",
+            "No"
+          );
+          if (overwrite === "Yes") {
+            const projectDetails = await promptForTargetLanguage();
+            const targetLanguage = projectDetails?.targetLanguage;
+            if (targetLanguage) {
+              await updateProjectSettings(projectDetails);
+              vscode.window.showInformationMessage(
+                `Target language updated to ${targetLanguage.refName}.`
+              );
+            }
+          } else {
+            vscode.window.showInformationMessage(
+              "Target language update cancelled."
+            );
+          }
+        } else {
+          const projectDetails = await promptForTargetLanguage();
+          const targetLanguage = projectDetails?.targetLanguage;
+          if (targetLanguage) {
+            await updateProjectSettings(projectDetails);
+            vscode.window.showInformationMessage(
+              `Target language set to ${targetLanguage.refName}.`
+            );
+          }
+        }
+        // const targetLanguage = await promptForTargetLanguage();
+        // if (targetLanguage) {
+        //   await updateProjectSettings(targetLanguage);
+        // }
+      }
+    ),
+    vscode.commands.registerCommand(
+      "codex-project-manager.promptUserForSourceLanguage",
+      async () => {
+        try {
+          const projectDetails = await promptForSourceLanguage();
+          const sourceLanguage = projectDetails?.sourceLanguage;
+          console.log("sourceLanguage", sourceLanguage);
+          if (sourceLanguage) {
+            await updateProjectSettings(projectDetails);
+            vscode.window.showInformationMessage(
+              `Source language set to ${sourceLanguage.refName}.`
+            );
+          }
+        } catch (error) {
+          vscode.window.showErrorMessage(
+            `Failed to set source language: ${error}`
+          );
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
       "codex-project-manager.initializeNewProject",
       async () => {
         await createProjectFiles({ shouldImportUSFM: false });
@@ -61,12 +122,12 @@ export async function activate(context: vscode.ExtensionContext) {
         await createProjectFiles({ shouldImportUSFM: true });
       }
     ),
-    vscode.commands.registerCommand(
-      "codex-project-manager.setSourceAndTargetLanguage",
-      async () => {
-        await setSourceAndTargetLanguage();
-      }
-    ),
+    // vscode.commands.registerCommand(
+    //   "codex-project-manager.setSourceAndTargetLanguage",
+    //   async () => {
+    //     await setSourceAndTargetLanguage();
+    //   }
+    // ),
     vscode.commands.registerCommand(
       "codex-project-manager.nameProject",
       async () => {

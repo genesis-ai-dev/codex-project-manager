@@ -137,15 +137,27 @@
             ]
           },
           {
-            "id": "setSourceAndTargetLanguage",
-            "title": "Set Source And Target Language",
-            "description": "Now that we have a folder, let's initialize your new Codex project.\n[Select Language](command:codex-project-manager.setSourceAndTargetLanguage)",
+            "id": "selectSourceLanguage",
+            "title": "Select Source Language",
+            "description": "Now that we have a folder, let's initialize your new Codex project.\n[Select Source Language](command:codex-project-manager.promptUserForSourceLanguage)\n",
             "media": {
               "image": "./src/media/source-and-target.png",
-              "altText": "Select Language"
+              "altText": "Select Source Language"
             },
             "completionEvents": [
-              "onCommand:codex-project-manager.setSourceAndTargetLanguage"
+              "onCommand:codex-project-manager.promptUserForSourceLanguage"
+            ]
+          },
+          {
+            "id": "selectTargetLanguage",
+            "title": "Select Target Language",
+            "description": "Now that we have a folder, let's initialize your new Codex project.\n[Select target Language](command:codex-project-manager.promptUserForTargetLanguage)\n",
+            "media": {
+              "image": "./src/media/source-and-target.png",
+              "altText": "Select Source Language"
+            },
+            "completionEvents": [
+              "onCommand:codex-project-manager.promptUserForTargetLanguage"
             ]
           },
           {
