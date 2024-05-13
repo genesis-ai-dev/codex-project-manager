@@ -6,6 +6,8 @@ import {
   promptForTargetLanguage,
   promptForSourceLanguage,
   updateMetadataFile,
+  initializeProjectMetadata,
+  projectFileExists,
 } from "./utils/projectUtils";
 import { vrefData } from "./utils/verseRefUtils/verseData";
 import {
@@ -17,6 +19,20 @@ import {
 } from "./utils/projectInitializers";
 import { migration_changeDraftFolderToFilesFolder } from "./utils/migartionUtils";
 import { registerProjectManagerViewWebviewProvider } from "./providers/parallelPassagesWebview/customParallelPassagesWebviewProvider";
+
+const checkIfMetadataIsInitialized = async (): Promise<boolean> => {
+  const metadataUri = vscode.Uri.joinPath(
+    vscode.workspace.workspaceFolders![0].uri,
+    "metadata.json"
+  );
+  try {
+    await vscode.workspace.fs.stat(metadataUri);
+    return true;
+  } catch (error) {
+    console.error("Failed to check metadata initialization:", error);
+    return false;
+  }
+};
 
 const createProjectFiles = async ({
   shouldImportUSFM,
@@ -36,6 +52,28 @@ const createProjectFiles = async ({
 };
 
 export async function activate(context: vscode.ExtensionContext) {
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (workspaceFolder) {
+    try {
+      const files = await vscode.workspace.fs.readDirectory(
+        workspaceFolder.uri
+      );
+      if (files.length === 0) {
+        const choice = await vscode.window.showInformationMessage(
+          "The workspace is empty. Do you want to generate codex files?",
+          { modal: true },
+          "Yes",
+          "No"
+        );
+        if (choice === "Yes") {
+          await checkForMissingFiles();
+          initializeProject(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error reading workspace directory:", error);
+    }
+  }
   registerProjectManagerViewWebviewProvider(context);
   await migration_changeDraftFolderToFilesFolder();
   console.log("Codex Project Manager is now active!");
@@ -122,15 +160,21 @@ export async function activate(context: vscode.ExtensionContext) {
         await createProjectFiles({ shouldImportUSFM: true });
       }
     ),
-    // vscode.commands.registerCommand(
-    //   "codex-project-manager.setSourceAndTargetLanguage",
-    //   async () => {
-    //     await setSourceAndTargetLanguage();
-    //   }
-    // ),
+    vscode.commands.registerCommand(
+      "codex-project-manager.generateMetadataFiles",
+      async () => {
+        await checkForMissingFiles();
+      }
+    ),
     vscode.commands.registerCommand(
       "codex-project-manager.nameProject",
       async (commandOnly: boolean = false) => {
+        const isMetadataInitialized = await checkIfMetadataIsInitialized();
+
+        if (!isMetadataInitialized) {
+          await checkForMissingFiles();
+          await initializeProjectMetadata({});
+        }
         if (!commandOnly) {
           const settingUri = vscode.Uri.file(
             vscode.workspace.getConfiguration().get("settings.json") || ""
@@ -149,6 +193,11 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "codex-project-manager.userName",
       async (commandOnly: boolean = false) => {
+        const isMetadataInitialized = await checkIfMetadataIsInitialized();
+        if (!isMetadataInitialized) {
+          await checkForMissingFiles();
+          await initializeProjectMetadata({});
+        }
         if (!commandOnly) {
           const settingUri = vscode.Uri.file(
             vscode.workspace.getConfiguration().get("settings.json") || ""
