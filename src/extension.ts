@@ -256,36 +256,48 @@ async function updateProjectSettings(projectDetails: ProjectDetails) {
   const projectSettings = vscode.workspace.getConfiguration(
     "codex-project-manager"
   );
-  await projectSettings.update(
-    "projectName",
-    projectDetails.projectName,
-    vscode.ConfigurationTarget.Workspace
-  );
-  await projectSettings.update(
-    "projectCategory",
-    projectDetails.projectCategory,
-    vscode.ConfigurationTarget.Workspace
-  );
-  await projectSettings.update(
-    "userName",
-    projectDetails.userName,
-    vscode.ConfigurationTarget.Workspace
-  );
-  await projectSettings.update(
-    "abbreviation",
-    projectDetails.abbreviation,
-    vscode.ConfigurationTarget.Workspace
-  );
-  await projectSettings.update(
-    "sourceLanguage",
-    projectDetails.sourceLanguage,
-    vscode.ConfigurationTarget.Workspace
-  );
-  await projectSettings.update(
-    "targetLanguage",
-    projectDetails.targetLanguage,
-    vscode.ConfigurationTarget.Workspace
-  );
+  if (projectDetails.projectName) {
+    await projectSettings.update(
+      "projectName",
+      projectDetails.projectName,
+      vscode.ConfigurationTarget.Workspace
+    );
+  }
+  if (projectDetails.projectCategory) {
+    await projectSettings.update(
+      "projectCategory",
+      projectDetails.projectCategory,
+      vscode.ConfigurationTarget.Workspace
+    );
+  }
+  if (projectDetails.userName) {
+    await projectSettings.update(
+      "userName",
+      projectDetails.userName,
+      vscode.ConfigurationTarget.Workspace
+    );
+  }
+  if (projectDetails.abbreviation) {
+    await projectSettings.update(
+      "abbreviation",
+      projectDetails.abbreviation,
+      vscode.ConfigurationTarget.Workspace
+    );
+  }
+  if (projectDetails.sourceLanguage) {
+    await projectSettings.update(
+      "sourceLanguage",
+      projectDetails.sourceLanguage,
+      vscode.ConfigurationTarget.Workspace
+    );
+  }
+  if (projectDetails.targetLanguage) {
+    await projectSettings.update(
+      "targetLanguage",
+      projectDetails.targetLanguage,
+      vscode.ConfigurationTarget.Workspace
+    );
+  }
 }
 
 export function deactivate() {
