@@ -52,6 +52,13 @@ const createProjectFiles = async ({
 };
 
 export async function activate(context: vscode.ExtensionContext) {
+  if (
+    !vscode.workspace.workspaceFolders ||
+    vscode.workspace.workspaceFolders.length === 0
+  ) {
+    // If no workspace folders are open, start the walkthrough
+    vscode.commands.executeCommand("codex-project-manager.startWalkthrough");
+  }
   registerProjectManagerViewWebviewProvider(context);
   await migration_changeDraftFolderToFilesFolder();
   console.log("Codex Project Manager is now active!");
