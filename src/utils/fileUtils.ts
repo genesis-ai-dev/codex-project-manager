@@ -161,9 +161,12 @@ export const getChatMessagesFromFile = async (
 };
 export function configureAutoSave() {
   const config = vscode.workspace.getConfiguration();
+  // Set autoSave to 'afterDelay'
   config.update(
     "files.autoSave",
     "afterDelay",
     vscode.ConfigurationTarget.Global
   );
+  // Set autoSaveDelay to 1000 milliseconds (1 second)
+  config.update("files.autoSaveDelay", 1000, vscode.ConfigurationTarget.Global);
 }
