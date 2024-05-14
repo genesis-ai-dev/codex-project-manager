@@ -52,28 +52,6 @@ const createProjectFiles = async ({
 };
 
 export async function activate(context: vscode.ExtensionContext) {
-  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-  if (workspaceFolder) {
-    try {
-      const files = await vscode.workspace.fs.readDirectory(
-        workspaceFolder.uri
-      );
-      if (files.length === 0) {
-        const choice = await vscode.window.showInformationMessage(
-          "The workspace is empty. Do you want to generate codex files?",
-          { modal: true },
-          "Yes",
-          "No"
-        );
-        if (choice === "Yes") {
-          await checkForMissingFiles();
-          initializeProject(false);
-        }
-      }
-    } catch (error) {
-      console.error("Error reading workspace directory:", error);
-    }
-  }
   registerProjectManagerViewWebviewProvider(context);
   await migration_changeDraftFolderToFilesFolder();
   console.log("Codex Project Manager is now active!");

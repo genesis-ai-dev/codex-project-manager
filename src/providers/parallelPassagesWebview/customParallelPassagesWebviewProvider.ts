@@ -165,6 +165,16 @@ const loadWebviewHtml = (
           "codex-project-manager.promptUserForTargetLanguage"
         );
         break;
+      case "downloadSourceTextBibles":
+        vscode.commands.executeCommand(
+          "codex-project-manager.downloadSourceTextBibles"
+        );
+        break;
+      case "createNewProject":
+        vscode.commands.executeCommand(
+          "codex-project-manager.startWalkthrough"
+        );
+        break;
       default:
         console.error(`Unknown command: ${message.command}`);
     }
