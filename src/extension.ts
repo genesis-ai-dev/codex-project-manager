@@ -19,6 +19,7 @@ import {
 } from "./utils/projectInitializers";
 import { migration_changeDraftFolderToFilesFolder } from "./utils/migartionUtils";
 import { registerProjectManagerViewWebviewProvider } from "./providers/parallelPassagesWebview/customParallelPassagesWebviewProvider";
+import { configureAutoSave } from "./utils/fileUtils";
 
 const checkIfMetadataIsInitialized = async (): Promise<boolean> => {
   const metadataUri = vscode.Uri.joinPath(
@@ -62,6 +63,16 @@ export async function activate(context: vscode.ExtensionContext) {
   registerProjectManagerViewWebviewProvider(context);
   await migration_changeDraftFolderToFilesFolder();
   console.log("Codex Project Manager is now active!");
+
+  vscode.commands.registerCommand(
+    "codex-project-manager.openAutoSaveSettings",
+    () => {
+      vscode.commands.executeCommand(
+        "workbench.action.openSettings",
+        "@files.autoSave"
+      );
+    }
+  );
   vscode.commands.registerCommand(
     "codex-project-manager.downloadSourceTextBibles",
     await downloadBible
@@ -159,6 +170,7 @@ export async function activate(context: vscode.ExtensionContext) {
         if (!isMetadataInitialized) {
           await checkForMissingFiles();
           await initializeProjectMetadata({});
+          configureAutoSave();
         }
         if (!commandOnly) {
           const settingUri = vscode.Uri.file(
@@ -182,6 +194,7 @@ export async function activate(context: vscode.ExtensionContext) {
         if (!isMetadataInitialized) {
           await checkForMissingFiles();
           await initializeProjectMetadata({});
+          configureAutoSave();
         }
         if (!commandOnly) {
           const settingUri = vscode.Uri.file(

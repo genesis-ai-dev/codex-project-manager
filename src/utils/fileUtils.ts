@@ -159,3 +159,11 @@ export const getChatMessagesFromFile = async (
     throw new Error("Failed to parse notebook comments from file");
   }
 };
+export function configureAutoSave() {
+  const config = vscode.workspace.getConfiguration();
+  config.update(
+    "files.autoSave",
+    "afterDelay",
+    vscode.ConfigurationTarget.Global
+  );
+}
