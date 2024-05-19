@@ -80,22 +80,6 @@
     },
     "walkthroughs": [
       {
-        "id": "setupLocalEnvironment",
-        "title": "Set up Translator's Copilot",
-        "description": "A simple walkthrough to help you set up a large language model on your device to benefit from the Copilot feature.",
-        "steps": [
-          {
-            "id": "downloadLMStudio",
-            "title": "Download LM Studio",
-            "description": "Download LM Studio to get a local LLM running to power your Translator's Copilot.\n\n[Download LM Studio](https://lmstudio.ai)",
-            "media": {
-              "image": "./src/media/lmstudio.gif",
-              "altText": "LM Studio"
-            }
-          }
-        ]
-      },
-      {
         "id": "codexWalkthrough",
         "title": "Start a Codex Project",
         "description": "A simple walkthrough to help you start a new Codex translation project.",
