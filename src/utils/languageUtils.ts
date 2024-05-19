@@ -1,8 +1,18 @@
 // Get the languages from the ./iso-639-3.tab file
 // import * as vscode from "vscode";
-import { LanguageMetadata } from "codex-types";
+import { LanguageMetadata, ScriptDirection } from "codex-types";
 
-const isoLanguageData = [
+const isoLanguageData: Array<{
+  Id: string;
+  Scope: string;
+  Language_Type: string;
+  Ref_Name: string;
+  Comment: string | null;
+  ScriptDirection?: string;
+  Part1?: string;
+  Part2b?: string;
+  Part2t?: string;
+}> = [
   {
     Id: "aaa",
     Scope: "I",
@@ -36063,10 +36073,12 @@ const isoLanguageData = [
     ScriptDirection: "ltr",
   },
   {
+    Id: "nan",
     Scope: "I",
     Language_Type: "L",
     Ref_Name: "MinNanChinese",
     Comment: null,
+    ScriptDirection: "ltr",
   },
   {
     Id: "nao",
@@ -63733,25 +63745,22 @@ const typeMap = {
   S: "special",
 };
 
-export const LanguageCodes: LanguageMetadata[] = isoLanguageData.map(
-  (line: any) => {
-    return {
-      tag: line.Id,
-      name: {
-        [line.Part1]: line.Ref_Name,
-      },
-      iso2b: line.Part2b,
-      iso2t: line.Part2t,
-      iso1: line.Part1,
-      scope: scopeMap[line.Scope as keyof typeof scopeMap] || line.Scope,
-      type:
-        typeMap[line.Language_Type as keyof typeof typeMap] ||
-        line.Language_Type,
-      refName: line.Ref_Name,
-      comment: line.Comment,
-      scriptDirection: line.ScriptDirection,
-    };
-  },
-);
+export const LanguageCodes: LanguageMetadata[] = isoLanguageData.map((line) => {
+  return {
+    tag: line.Id,
+    name: {
+      [line.Id]: line.Ref_Name,
+    },
+    iso2b: line.Part2b,
+    iso2t: line.Part2t,
+    iso1: line.Part1,
+    scope: scopeMap[line.Scope as keyof typeof scopeMap] || line.Scope,
+    type:
+      typeMap[line.Language_Type as keyof typeof typeMap] || line.Language_Type,
+    refName: line.Ref_Name,
+    comment: line.Comment,
+    scriptDirection: line.ScriptDirection as ScriptDirection,
+  };
+});
 
 export type { LanguageMetadata };

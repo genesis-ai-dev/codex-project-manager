@@ -17,8 +17,13 @@ export async function promptForTargetLanguage(): Promise<
   ProjectDetails | undefined
 > {
   const languages = LanguageCodes;
+
+  function getLanguageDisplayName(lang: LanguageMetadata): string {
+    return `${lang.refName} (${lang.tag})`;
+  }
+
   const targetLanguagePick = await vscode.window.showQuickPick(
-    languages.map((lang: LanguageMetadata) => `${lang.refName} (${lang.tag})`),
+    languages.map(getLanguageDisplayName),
     {
       placeHolder: "Select the target language",
     }
@@ -29,7 +34,7 @@ export async function promptForTargetLanguage(): Promise<
 
   const targetLanguage = languages.find(
     (lang: LanguageMetadata) =>
-      `${lang.refName} (${lang.tag})` === targetLanguagePick
+      getLanguageDisplayName(lang) === targetLanguagePick
   );
   if (!targetLanguage) {
     return;
@@ -239,6 +244,8 @@ export async function updateMetadataFile() {
   project.meta.category = projectSettings.get("projectCategory", "");
   project.meta.generator = project.meta.generator || {}; // Ensure generator object exists
   project.meta.generator.userName = projectSettings.get("userName", "");
+  project.languages[0] = projectSettings.get("sourceLanguage", "");
+  project.languages[1] = projectSettings.get("targetLanguage", "");
   // Update other fields as needed
   console.log("Project settings loaded:", { projectSettings, project });
   const updatedProjectFileData = Buffer.from(
@@ -250,3 +257,21 @@ export async function updateMetadataFile() {
     `Project metadata updated at ${projectFilePath.fsPath}`
   );
 }
+
+export const projectFileExists = async () => {
+  const workspaceFolder = vscode.workspace.workspaceFolders
+    ? vscode.workspace.workspaceFolders[0]
+    : undefined;
+  if (!workspaceFolder) {
+    return false;
+  }
+  const projectFilePath = vscode.Uri.joinPath(
+    workspaceFolder.uri,
+    "metadata.json"
+  );
+  const fileExists = await vscode.workspace.fs.stat(projectFilePath).then(
+    () => true,
+    () => false
+  );
+  return fileExists;
+};

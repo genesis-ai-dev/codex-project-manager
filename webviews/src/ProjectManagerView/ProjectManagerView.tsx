@@ -7,18 +7,23 @@ interface AccountButtonProps {
   iconClass: string;
   onClick: () => void;
   buttonDescriptionText: string;
+  buttonIcon?: string;
+  outerContainerStyles?: React.CSSProperties;
 }
 
 const AccountButton: React.FC<AccountButtonProps> = ({
   iconClass,
   onClick,
   buttonDescriptionText,
+  buttonIcon = "codicon-pencil",
+  outerContainerStyles = {},
 }) => {
   return (
     <div
       style={{
         width: "100%",
         marginBottom: "1rem",
+        ...outerContainerStyles,
       }}
     >
       <div
@@ -58,7 +63,7 @@ const AccountButton: React.FC<AccountButtonProps> = ({
           }}
         >
           <i
-            className={`codicon codicon-pencil`}
+            className={`codicon ${buttonIcon}`}
             style={{
               // fontSize: "200%",
               padding: "0.5rem 0",
@@ -132,41 +137,74 @@ function App() {
           padding: "0 2rem",
         }}
       >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            width: "100%",
+          }}
+        >
+          <AccountButton
+            iconClass="codicon-whole-word"
+            onClick={() =>
+              vscode.postMessage({
+                command: "renameProject",
+              })
+            }
+            buttonDescriptionText="Rename Project"
+          />
+          <AccountButton
+            iconClass="codicon-account"
+            onClick={() =>
+              vscode.postMessage({
+                command: "changeUserName",
+              })
+            }
+            buttonDescriptionText="Change User Name"
+          />
+          <AccountButton
+            iconClass="codicon-source-control"
+            onClick={() =>
+              vscode.postMessage({
+                command: "changeSourceLanguage",
+              })
+            }
+            buttonDescriptionText="Change Source Language"
+          />
+          <AccountButton
+            iconClass="codicon-globe"
+            onClick={() =>
+              vscode.postMessage({
+                command: "changeTargetLanguage",
+              })
+            }
+            buttonDescriptionText="Change Target Language"
+          />
+          <AccountButton
+            iconClass="codicon-cloud-download"
+            onClick={() =>
+              vscode.postMessage({
+                command: "downloadSourceTextBibles",
+              })
+            }
+            buttonDescriptionText="Download Source Text Bibles"
+            buttonIcon="codicon-arrow-down"
+          />
+        </div>
+
         <AccountButton
-          iconClass="codicon-whole-word"
+          iconClass="codicon-book"
           onClick={() =>
             vscode.postMessage({
-              command: "renameProject",
+              command: "createNewProject",
             })
           }
-          buttonDescriptionText="Rename Project"
-        />
-        <AccountButton
-          iconClass="codicon-account"
-          onClick={() =>
-            vscode.postMessage({
-              command: "changeUserName",
-            })
-          }
-          buttonDescriptionText="Change User Name"
-        />
-        <AccountButton
-          iconClass="codicon-source-control"
-          onClick={() =>
-            vscode.postMessage({
-              command: "changeSourceLanguage",
-            })
-          }
-          buttonDescriptionText="Change Source Language"
-        />
-        <AccountButton
-          iconClass="codicon-globe"
-          onClick={() =>
-            vscode.postMessage({
-              command: "changeTargetLanguage",
-            })
-          }
-          buttonDescriptionText="Change Target Language"
+          buttonDescriptionText="Create New Project"
+          buttonIcon="codicon-plus"
+          outerContainerStyles={{
+            paddingTop: "10vh",
+          }}
         />
       </div>
     </div>
