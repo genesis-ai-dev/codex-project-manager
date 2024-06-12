@@ -351,3 +351,5 @@ async function updateProjectSettings(projectDetails: ProjectDetails) {
 export function deactivate() {
   console.log("Codex Project Manager is now deactivated!");
 }
+
+

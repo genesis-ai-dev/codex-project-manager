@@ -328,6 +328,31 @@ export async function initializeProject(shouldImportUSFM: boolean) {
         );
         break;
     }
+    
+    vscode.window.showInformationMessage("Initializing GitHub repository...");
+    try {
+      // Ensure the Git extension is activated
+      const gitExtension = vscode.extensions.getExtension('vscode.git');
+      if (gitExtension) {
+        await gitExtension.activate();
+        // Initialize a new GitHub repository in the workspace folder
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (workspaceFolders && workspaceFolders.length > 0) {
+          const rootPath = workspaceFolders[0].uri.fsPath;
+          await vscode.commands.executeCommand('git.init', rootPath);
+          vscode.window.showInformationMessage("GitHub repository initialized successfully in the current workspace folder.");
+        } else {
+          vscode.window.showErrorMessage("No workspace folder found to initialize the GitHub repository.");
+        }
+      } else {
+        vscode.window.showErrorMessage("Git extension is not available.");
+      }
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Failed to initialize new GitHub repository: ${error}`
+      );
+    }
+
     const shouldOverWrite =
       overwriteSelection === ConfirmationOptions.Yes ||
       overwriteSelection === ConfirmationOptions.NotNeeded;
