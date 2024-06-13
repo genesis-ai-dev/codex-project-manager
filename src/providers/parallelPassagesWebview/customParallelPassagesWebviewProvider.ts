@@ -165,6 +165,11 @@ const loadWebviewHtml = (
           "codex-project-manager.promptUserForTargetLanguage"
         );
         break;
+      case "openAISettings":
+        vscode.commands.executeCommand(
+          "codex-project-manager.openAISettings"
+        );
+        break;
       case "downloadSourceTextBibles":
         vscode.commands.executeCommand(
           "codex-project-manager.downloadSourceTextBibles"

@@ -191,6 +191,16 @@ function App() {
             buttonDescriptionText="Download Source Text Bibles"
             buttonIcon="codicon-arrow-down"
           />
+          <AccountButton
+            iconClass="codicon-terminal"
+            onClick={() =>
+              vscode.postMessage({
+                command: "openAISettings",
+              })
+            }
+            buttonDescriptionText="Open AI Settings"
+            buttonIcon="codicon-settings"
+          />
         </div>
 
         <AccountButton

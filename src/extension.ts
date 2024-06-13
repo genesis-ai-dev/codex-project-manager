@@ -415,7 +415,17 @@ export async function activate(context: vscode.ExtensionContext) {
       if (event.affectsConfiguration("codex-project-manager")) {
         updateMetadataFile();
       }
-    })
+    }),
+
+    //register command to open AI settings
+    vscode.commands.registerCommand(
+      "codex-project-manager.openAISettings",
+      executeWithRedirecting(async () => {
+        vscode.commands.executeCommand("workbench.action.openSettings", "@ext:project-accelerate.ai-translate");
+      })
+    )
+
+
   );
 
   // Prompt user to install recommended extensions
