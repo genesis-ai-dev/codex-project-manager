@@ -116,7 +116,7 @@ export async function initializeProjectMetadata(details: ProjectDetails) {
       vscode.workspace
         .getConfiguration("codex-project-manager")
         .get<string>("projectName") ||
-      "Codex Project",
+      "", // previously "Codex Project"
     meta: {
       version: "0.0.0",
       category:
@@ -133,7 +133,7 @@ export async function initializeProjectMetadata(details: ProjectDetails) {
           vscode.workspace
             .getConfiguration("codex-project-manager")
             .get<string>("userName") ||
-          "Unknown",
+          "", // previously "Unknown"
       },
       defaultLocale: "en",
       dateCreated: new Date().toDateString(),

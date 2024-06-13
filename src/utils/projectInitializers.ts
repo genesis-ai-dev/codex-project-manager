@@ -273,120 +273,133 @@ export async function initializeProject(shouldImportUSFM: boolean) {
     ? vscode.workspace.workspaceFolders[0]
     : undefined;
   if (!workspaceFolder) {
-    console.error(
+    vscode.window.showErrorMessage(
       "No workspace folder found. Please open a folder to store your project in."
     );
     return;
   }
 
-  vscode.window.showInformationMessage("Initializing new project...");
-  try {
-    let projectScope;
-    const projectFilePath = vscode.Uri.joinPath(
-      workspaceFolder.uri,
-      "metadata.json"
-    );
-    const fileData = await vscode.workspace.fs.readFile(projectFilePath);
-    const metadata = JSON.parse(fileData.toString());
-    projectScope = metadata?.type?.flavorType?.currentScope;
-    if (!projectScope) {
-      vscode.window.showErrorMessage(
-        "Failed to initialize new project: project scope not found."
-      );
-      return;
-    }
-    const books = Object.keys(projectScope);
+  vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: "Initializing new project...",
+      cancellable: false,
+    },
+    async (progress) => {
+      progress.report({ increment: 0, message: "Starting initialization..." });
 
-    const codexFiles = await vscode.workspace.findFiles("**/*.codex");
-    let overwriteSelection = ConfirmationOptions.NotNeeded;
-
-    if (codexFiles.length > 0) {
-      const userChoice = await vscode.window.showWarningMessage(
-        "Do you want to overwrite any existing .codex project files?",
-        { modal: true }, // This option ensures the dialog stays open until an explicit choice is made.
-        ConfirmationOptions.Yes,
-        ConfirmationOptions.No
-      );
-      overwriteSelection =
-        userChoice === ConfirmationOptions.Yes
-          ? ConfirmationOptions.Yes
-          : ConfirmationOptions.No;
-    }
-
-    switch (overwriteSelection) {
-      case ConfirmationOptions.NotNeeded:
-        vscode.window.showInformationMessage("Creating Codex Project.");
-        break;
-      case ConfirmationOptions.Yes:
-        vscode.window.showInformationMessage(
-          "Creating Codex Project with overwrite."
+      try {
+        let projectScope;
+        const projectFilePath = vscode.Uri.joinPath(
+          workspaceFolder.uri,
+          "metadata.json"
         );
-        break;
-      default:
-        vscode.window.showInformationMessage(
-          "Creating Codex Project without overwrite."
-        );
-        break;
-    }
-    
-    vscode.window.showInformationMessage("Initializing GitHub repository...");
-    try {
-      // Ensure the Git extension is activated
-      const gitExtension = vscode.extensions.getExtension('vscode.git');
-      if (gitExtension) {
-        await gitExtension.activate();
-        // Initialize a new GitHub repository in the workspace folder
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (workspaceFolders && workspaceFolders.length > 0) {
-          const rootPath = workspaceFolders[0].uri.fsPath;
-          await vscode.commands.executeCommand('git.init', rootPath);
-          vscode.window.showInformationMessage("GitHub repository initialized successfully in the current workspace folder.");
-        } else {
-          vscode.window.showErrorMessage("No workspace folder found to initialize the GitHub repository.");
+        const fileData = await vscode.workspace.fs.readFile(projectFilePath);
+        const metadata = JSON.parse(fileData.toString());
+        projectScope = metadata?.type?.flavorType?.currentScope;
+        if (!projectScope) {
+          vscode.window.showErrorMessage(
+            "Failed to initialize new project: project scope not found."
+          );
+          return;
         }
-      } else {
-        vscode.window.showErrorMessage("Git extension is not available.");
-      }
-    } catch (error) {
-      vscode.window.showErrorMessage(
-        `Failed to initialize new GitHub repository: ${error}`
-      );
-    }
+        const books = Object.keys(projectScope);
 
-    const shouldOverWrite =
-      overwriteSelection === ConfirmationOptions.Yes ||
-      overwriteSelection === ConfirmationOptions.NotNeeded;
-    let foldersWithUsfmToConvert: vscode.Uri[] | undefined;
-    if (shouldImportUSFM) {
-      const folderUri = await vscode.window.showOpenDialog({
-        canSelectFolders: true,
-        canSelectFiles: false,
-        canSelectMany: false,
-        openLabel: "Choose USFM project folder",
-      });
-      console.log({ folderUri });
-      foldersWithUsfmToConvert = folderUri;
+        const codexFiles = await vscode.workspace.findFiles("**/*.codex");
+        let overwriteSelection = ConfirmationOptions.NotNeeded;
+
+        if (codexFiles.length > 0) {
+          const userChoice = await vscode.window.showWarningMessage(
+            "Do you want to overwrite any existing .codex project files?",
+            { modal: true },
+            ConfirmationOptions.Yes,
+            ConfirmationOptions.No
+          );
+          overwriteSelection =
+            userChoice === ConfirmationOptions.Yes
+              ? ConfirmationOptions.Yes
+              : ConfirmationOptions.No;
+        }
+
+        switch (overwriteSelection) {
+          case ConfirmationOptions.NotNeeded:
+            vscode.window.showInformationMessage("Creating Codex Project.");
+            break;
+          case ConfirmationOptions.Yes:
+            vscode.window.showInformationMessage(
+              "Creating Codex Project with overwrite."
+            );
+            break;
+          default:
+            vscode.window.showInformationMessage(
+              "Creating Codex Project without overwrite."
+            );
+            break;
+        }
+
+        progress.report({ increment: 50, message: "Setting up GitHub repository..." });
+        try {
+          const gitExtension = vscode.extensions.getExtension('vscode.git');
+          if (gitExtension) {
+            await gitExtension.activate();
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (workspaceFolders && workspaceFolders.length > 0) {
+              const rootPath = workspaceFolders[0].uri.fsPath;
+              await vscode.commands.executeCommand('git.init', rootPath);
+              vscode.window.showInformationMessage("GitHub repository initialized successfully");
+            } else {
+              vscode.window.showErrorMessage("No workspace folder found to initialize the GitHub repository.");
+            }
+          } else {
+            vscode.window.showErrorMessage("Git extension is not available.");
+          }
+        } catch (error) {
+          vscode.window.showErrorMessage(
+            `Failed to initialize new GitHub repository: ${error}`
+          );
+        }
+
+        const shouldOverWrite =
+          overwriteSelection === ConfirmationOptions.Yes ||
+          overwriteSelection === ConfirmationOptions.NotNeeded;
+        let foldersWithUsfmToConvert: vscode.Uri[] | undefined;
+        if (shouldImportUSFM) {
+          const folderUri = await vscode.window.showOpenDialog({
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false,
+            openLabel: "Choose USFM project folder",
+          });
+          foldersWithUsfmToConvert = folderUri;
+        }
+
+        progress.report({ increment: 80, message: "Creating project notebooks and comment files..." });
+        await createProjectNotebooks({
+          shouldOverWrite,
+          books,
+          foldersWithUsfmToConvert,
+        });
+        await createProjectCommentFiles({
+          shouldOverWrite,
+        });
+
+        progress.report({ increment: 100, message: "Project initialization complete." });
+        vscode.window.showInformationMessage("Project initialized successfully.");
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `Failed to initialize new project: ${error}`
+        );
+      }
+
+      try {
+        await vscode.commands.executeCommand(
+          "scripture-explorer-activity-bar.refreshEntry"
+        );
+      } catch (error) {
+        console.log("error called commands of outside extension", error);
+      }
     }
-    await createProjectNotebooks({
-      shouldOverWrite,
-      books,
-      foldersWithUsfmToConvert,
-    });
-    await createProjectCommentFiles({
-      shouldOverWrite,
-    });
-  } catch (error) {
-    vscode.window.showErrorMessage(
-      `Failed to initialize new project: ${error}`
-    );
-  }
-  try {
-    await vscode.commands.executeCommand(
-      "scripture-explorer-activity-bar.refreshEntry"
-    );
-  } catch (error) {
-    console.log("error called commands of outside extension", error);
-  }
+  );
 }
 
 export async function checkForMissingFiles() {
