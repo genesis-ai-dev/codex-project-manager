@@ -420,9 +420,18 @@ export async function activate(context: vscode.ExtensionContext) {
     //register command to open AI settings
     vscode.commands.registerCommand(
       "codex-project-manager.openAISettings",
-      executeWithRedirecting(async () => {
+      async () => {
         vscode.commands.executeCommand("workbench.action.openSettings", "@ext:project-accelerate.ai-translate");
-      })
+      }
+    ),
+
+    //register command to import eBible project
+    vscode.commands.registerCommand(
+      "codex-project-manager.importEBibleProject",
+      async () => {
+        await vscode.window.showInformationMessage("Importing eBible project..."); 
+        //TODO: implement import eBible project
+      }
     )
 
 
