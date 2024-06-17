@@ -421,7 +421,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "codex-project-manager.openAISettings",
       async () => {
-        vscode.commands.executeCommand("workbench.action.openSettings", "@ext:project-accelerate.ai-translate");
+        vscode.commands.executeCommand("workbench.action.openSettings", "translators-copilot");
       }
     ),
 

@@ -208,7 +208,7 @@ function App() {
                 command: "openAISettings",
               })
             }
-            buttonDescriptionText="Open AI Settings"
+            buttonDescriptionText="Open AI Chat and Completion Settings"
             buttonIcon="codicon-settings"
           />
         </div>
