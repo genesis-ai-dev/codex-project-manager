@@ -192,13 +192,13 @@ function App() {
             buttonIcon="codicon-arrow-down"
           />
           <AccountButton
-            iconClass="codicon-desktop-download"
+            iconClass="codicon-cloud-download"
             onClick={() =>
               vscode.postMessage({
-                command: "importEBibleProject",
+                command: "downloadTargetTextBibles",
               })
             }
-            buttonDescriptionText="Import eBible Project"
+            buttonDescriptionText="Download Target Text Bibles"
             buttonIcon="codicon-arrow-down"
           />
           <AccountButton

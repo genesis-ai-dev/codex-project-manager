@@ -165,9 +165,9 @@ const loadWebviewHtml = (
           "codex-project-manager.promptUserForTargetLanguage"
         );
         break;
-      case "importEBibleProject":
+      case "downloadTargetTextBibles":
         vscode.commands.executeCommand(
-          "codex-project-manager.importEBibleProject"
+          "codex-project-manager.downloadTargetTextBibles"
         );
         break;
       case "openAISettings":

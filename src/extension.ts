@@ -163,8 +163,13 @@ export async function activate(context: vscode.ExtensionContext) {
   ));
   vscode.commands.registerCommand(
     "codex-project-manager.downloadSourceTextBibles",
-    await downloadBible
+    () => downloadBible("source")
   );
+  vscode.commands.registerCommand(
+    "codex-project-manager.downloadTargetTextBibles",
+    () => downloadBible("target")
+  );
+
   vscode.commands.registerCommand(
     "codex-project-manager.setEditorFontToTargetLanguage",
     await setTargetFont
@@ -424,15 +429,6 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.executeCommand("workbench.action.openSettings", "translators-copilot");
       }
     ),
-
-    //register command to import eBible project
-    vscode.commands.registerCommand(
-      "codex-project-manager.importEBibleProject",
-      async () => {
-        await vscode.window.showInformationMessage("Importing eBible project..."); 
-        //TODO: implement import eBible project
-      }
-    )
 
 
   );

@@ -34,25 +34,36 @@ const PATHS_TO_POPULATE = [
   { filePath: "file-comments.json", defaultContent: "[]" }, // We can't use the VS Code comments api for notebooks (.codex files) and other non standard files, so a second files avoids overwriting conflicts
   { filePath: "chat-threads.json", defaultContent: "[]" }, // This is where chat thread conversations are saved
 ];
-export async function downloadBible() {
+export async function downloadBible(languageType: string) {
+  languageType = languageType.toLowerCase();
+  console.log("languageType", languageType);
+  if (languageType !== "source" && languageType !== "target") {
+    vscode.window.showErrorMessage("Invalid language type specified. Please use 'source' or 'target'.");
+    return;
+  }
+
   const projectMetadata = await getProjectMetadata();
-  const sourceLanguageCode = projectMetadata?.languages?.find(
-    (language) => language.projectStatus === LanguageProjectStatus.SOURCE
+  const languageCode = projectMetadata?.languages?.find(
+    (language) => language.projectStatus === (languageType === "source" ? LanguageProjectStatus.SOURCE : LanguageProjectStatus.TARGET)
   )?.tag;
-  let ebibleCorpusMetadata: EbibleCorpusMetadata[] =
-    getEBCorpusMetadataByLanguageCode(sourceLanguageCode || "");
+
+  if (!languageCode) {
+    vscode.window.showErrorMessage(`No ${languageType} language specified in project metadata.`);
+    return;
+  }
+
+  let ebibleCorpusMetadata: EbibleCorpusMetadata[] = getEBCorpusMetadataByLanguageCode(languageCode);
   if (ebibleCorpusMetadata.length === 0) {
     vscode.window.showInformationMessage(
-      `No source text bibles found for ${
-        sourceLanguageCode || "(no source language specified in metadata.json)"
-      } in the eBible corpus.`
+      `No text bibles found for ${languageCode} in the eBible corpus.`
     );
-    ebibleCorpusMetadata = getEBCorpusMetadataByLanguageCode(""); // Get all bibles if no source language is specified
+    ebibleCorpusMetadata = getEBCorpusMetadataByLanguageCode(""); // Get all bibles if no language is specified
   }
+
   const selectedCorpus = await vscode.window.showQuickPick(
     ebibleCorpusMetadata.map((corpus) => corpus.file),
     {
-      placeHolder: "Select a source text bible to download",
+      placeHolder: `Select a ${languageType.toLowerCase()} text bible to download`,
     }
   );
 
@@ -63,74 +74,75 @@ export async function downloadBible() {
     if (selectedCorpusMetadata) {
       const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
       if (workspaceRoot) {
-        const vrefPath = await ensureVrefList(workspaceRoot);
-
-        const sourceTextBiblePath = path.join(
-          workspaceRoot,
-          ".project",
-          "sourceTextBibles",
-          selectedCorpusMetadata.file
-        );
-        const sourceTextBiblePathUri = vscode.Uri.file(sourceTextBiblePath);
-        try {
-          console.log("Checking if source text bible exists");
-          await vscode.workspace.fs.stat(sourceTextBiblePathUri);
-          vscode.window.showInformationMessage(
-            `Source text bible ${selectedCorpusMetadata.file} already exists.`
-          );
-        } catch {
-          await downloadEBibleText(selectedCorpusMetadata, workspaceRoot);
-          vscode.window.showInformationMessage(
-            `Source text bible for ${selectedCorpusMetadata.lang} downloaded successfully.`
-          );
-        }
-
-        // Read the vref.txt file and the newly downloaded source text bible file
-        const vrefFilePath = vscode.Uri.file(vrefPath);
-        const vrefFileData = await vscode.workspace.fs.readFile(vrefFilePath);
-        const vrefLines = new TextDecoder("utf-8")
-          .decode(vrefFileData)
-          .split(/\r?\n/);
-
-        const sourceTextBibleData = await vscode.workspace.fs.readFile(
-          sourceTextBiblePathUri
-        );
-        const bibleLines = new TextDecoder("utf-8")
-          .decode(sourceTextBibleData)
-          .split(/\r?\n/);
-
-        // Zip the lines together
-        const zippedLines = vrefLines
-          .map((vrefLine, index) => `${vrefLine} ${bibleLines[index] || ""}`)
-          .filter((line) => line.trim() !== "");
-
-        // Write the zipped lines to a new .bible file
-        let fileNameWithoutExtension;
-        if (selectedCorpusMetadata.file.includes(".")) {
-          fileNameWithoutExtension = selectedCorpusMetadata.file.split(".")[0];
-        } else {
-          fileNameWithoutExtension = selectedCorpusMetadata.file;
-        }
-
-        const bibleFilePath = path.join(
-          workspaceRoot,
-          ".project",
-          "sourceTextBibles",
-          `${fileNameWithoutExtension}.bible`
-        );
-        const bibleFileUri = vscode.Uri.file(bibleFilePath);
-        await vscode.workspace.fs.writeFile(
-          bibleFileUri,
-          new TextEncoder().encode(zippedLines.join("\n"))
-        );
-
-        vscode.window.showInformationMessage(
-          `.bible file created successfully at ${bibleFilePath}`
-        );
+        await handleBibleDownload(selectedCorpusMetadata, workspaceRoot, languageType);
       }
     }
   }
   //   indexVerseRefsInSourceText();
+}
+
+async function handleBibleDownload(corpusMetadata: EbibleCorpusMetadata, workspaceRoot: string, languageType: string) {
+  const vrefPath = await ensureVrefList(workspaceRoot);
+
+  const bibleTextPath = path.join(
+    workspaceRoot,
+    ".project",
+    languageType === "source" ? "sourceTextBibles" : "targetTextBibles",
+    corpusMetadata.file
+  );
+  const bibleTextPathUri = vscode.Uri.file(bibleTextPath);
+  try {
+    console.log("Checking if bible text exists");
+    await vscode.workspace.fs.stat(bibleTextPathUri);
+    vscode.window.showInformationMessage(
+      `Bible text ${corpusMetadata.file} already exists.`
+    );
+  } catch {
+    await downloadEBibleText(corpusMetadata, workspaceRoot, languageType);
+    vscode.window.showInformationMessage(
+      `Bible text for ${corpusMetadata.lang} downloaded successfully.`
+    );
+  }
+
+  // Read the vref.txt file and the newly downloaded bible text file
+  const vrefFilePath = vscode.Uri.file(vrefPath);
+  const vrefFileData = await vscode.workspace.fs.readFile(vrefFilePath);
+  const vrefLines = new TextDecoder("utf-8")
+    .decode(vrefFileData)
+    .split(/\r?\n/);
+
+  const bibleTextData = await vscode.workspace.fs.readFile(
+    bibleTextPathUri
+  );
+  const bibleLines = new TextDecoder("utf-8")
+    .decode(bibleTextData)
+    .split(/\r?\n/);
+
+  // Zip the lines together
+  const zippedLines = vrefLines
+    .map((vrefLine, index) => `${vrefLine} ${bibleLines[index] || ""}`)
+    .filter((line) => line.trim() !== "");
+
+  // Write the zipped lines to a new .bible file
+  let fileNameWithoutExtension = corpusMetadata.file.includes(".")
+    ? corpusMetadata.file.split(".")[0]
+    : corpusMetadata.file;
+
+  const bibleFilePath = path.join(
+    workspaceRoot,
+    ".project",
+    languageType === "source" ? "sourceTextBibles" : "targetTextBibles",
+    `${fileNameWithoutExtension}.bible`
+  );
+  const bibleFileUri = vscode.Uri.file(bibleFilePath);
+  await vscode.workspace.fs.writeFile(
+    bibleFileUri,
+    new TextEncoder().encode(zippedLines.join("\n"))
+  );
+
+  vscode.window.showInformationMessage(
+    `.bible file created successfully at ${bibleFilePath}`
+  );
 }
 
 export async function setTargetFont() {
