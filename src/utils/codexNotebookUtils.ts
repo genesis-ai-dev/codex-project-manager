@@ -210,6 +210,91 @@ export async function createProjectNotebooks({
   }
   await Promise.all(notebookCreationPromises);
 }
+
+export async function createProjectNotebooksFromTxt({
+  shouldOverWrite = false,
+  books = undefined,
+  folderWithTxtToConvert = undefined,
+}: {
+  shouldOverWrite?: boolean;
+  books?: string[] | undefined;
+  folderWithTxtToConvert?: vscode.Uri[] | undefined;
+} = {}) {
+  if (!folderWithTxtToConvert) {
+    console.error("No folder provided for TXT to Notebook conversion.");
+    return;
+  }
+
+  const notebookCreationPromises = folderWithTxtToConvert.map(async (folderUri) => {
+    const files = await vscode.workspace.fs.readDirectory(folderUri);
+    const txtFiles = files.filter(([file, type]) => type === vscode.FileType.File && file.endsWith('.txt'));
+
+    return Promise.all(txtFiles.map(async ([file]) => {
+      const filePath = vscode.Uri.joinPath(folderUri, file);
+      const fileContent = await vscode.workspace.fs.readFile(filePath);
+      const text = new TextDecoder("utf-8").decode(fileContent);
+      const lines = text.split(/\r?\n/);
+      const chapters: { [key: string]: string[] } = {};
+      lines.reduce((acc, line) => {
+        const chapterMatch = line.match(/(\d+):/);
+        if (chapterMatch) {
+          const chapter = chapterMatch[1];
+          if (!acc[chapter]) {
+            acc[chapter] = [];
+          }
+          acc[chapter].push(line);
+        }
+        return acc;
+      }, chapters);
+
+      const cells: vscode.NotebookCellData[] = [];
+      Object.keys(chapters).forEach(chapter => {
+        // Markdown cell for the chapter heading
+        const chapterHeadingCell = new vscode.NotebookCellData(
+          vscode.NotebookCellKind.Markup,
+          `# Chapter ${chapter}`,
+          "markdown"
+        );
+        chapterHeadingCell.metadata = {
+          type: "chapter-heading",
+          data: {
+            chapter: chapter,
+          },
+        };
+        cells.push(chapterHeadingCell);
+
+        // Code cell for the chapter content
+        cells.push(new vscode.NotebookCellData(
+          vscode.NotebookCellKind.Code,
+          chapters[chapter].join('\n'),
+          "scripture"
+        ));
+
+        // Markdown cell for notes
+        cells.push(new vscode.NotebookCellData(
+          vscode.NotebookCellKind.Markup,
+          `### Notes for Chapter ${chapter}`,
+          "markdown"
+        ));
+      });
+
+      const notebookData = new vscode.NotebookData(cells);
+      const serializer = new CodexContentSerializer();
+      const notebookFile = await serializer.serializeNotebook(notebookData, new vscode.CancellationTokenSource().token);
+
+      // Save the notebook
+      const notebookPath = `files/target/${path.basename(file, '.txt')}.codex`;
+      return generateFile({
+        filepath: notebookPath,
+        fileContent: notebookFile,
+        shouldOverWrite,
+      });
+    }));
+  });
+
+  await Promise.all(notebookCreationPromises.flat());
+}
+
 export async function createProjectCommentFiles({
   shouldOverWrite = false,
 }: {

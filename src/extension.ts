@@ -8,6 +8,7 @@ import {
   promptForSourceLanguage,
   updateMetadataFile,
   initializeProjectMetadata,
+  parseBibleFile,
 } from "./utils/projectUtils";
 import { vrefData } from "./utils/verseRefUtils/verseData";
 import {
@@ -167,7 +168,17 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   vscode.commands.registerCommand(
     "codex-project-manager.downloadTargetTextBibles",
-    () => downloadBible("target")
+    async () => {
+      const bibleFile = await downloadBible("target");
+      const response = await vscode.window.showInformationMessage("Would you like to load target text into the project?", 
+      { modal: true }, 
+      "Yes");
+      if (response === "Yes") {
+        // TODO: parse the downloaded *.bible file by book (the first three letters of each line),
+        // put each book into separate new *.codex files, and replace existing files in ./files/target/ with these new files
+        parseBibleFile(bibleFile);
+      }
+    }
   );
 
   vscode.commands.registerCommand(

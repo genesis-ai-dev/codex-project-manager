@@ -34,12 +34,14 @@ const PATHS_TO_POPULATE = [
   { filePath: "file-comments.json", defaultContent: "[]" }, // We can't use the VS Code comments api for notebooks (.codex files) and other non standard files, so a second files avoids overwriting conflicts
   { filePath: "chat-threads.json", defaultContent: "[]" }, // This is where chat thread conversations are saved
 ];
-export async function downloadBible(languageType: string) {
+
+
+export async function downloadBible(languageType: string): Promise<string | undefined> {
   languageType = languageType.toLowerCase();
   console.log("languageType", languageType);
   if (languageType !== "source" && languageType !== "target") {
     vscode.window.showErrorMessage("Invalid language type specified. Please use 'source' or 'target'.");
-    return;
+    return undefined;
   }
 
   const projectMetadata = await getProjectMetadata();
@@ -75,9 +77,11 @@ export async function downloadBible(languageType: string) {
       const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
       if (workspaceRoot) {
         await handleBibleDownload(selectedCorpusMetadata, workspaceRoot, languageType);
+        return selectedCorpusMetadata.file;
       }
     }
   }
+  return undefined;
   //   indexVerseRefsInSourceText();
 }
 
