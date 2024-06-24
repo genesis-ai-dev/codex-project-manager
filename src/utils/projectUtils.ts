@@ -22,61 +22,123 @@ export async function promptForTargetLanguage(): Promise<
     return `${lang.refName} (${lang.tag})`;
   }
 
-  const targetLanguagePick = await vscode.window.showQuickPick(
-    languages.map(getLanguageDisplayName),
-    {
-      placeHolder: "Select the target language",
-    }
-  );
+  const quickPickItems = [
+    ...languages.map(getLanguageDisplayName),
+    "$(add) Custom Language"
+  ];
+
+  const targetLanguagePick = await vscode.window.showQuickPick(quickPickItems, {
+    placeHolder: "Select the target language or choose custom",
+    matchOnDescription: true,
+    matchOnDetail: true,
+  });
+
   if (!targetLanguagePick) {
     return;
   }
 
-  const targetLanguage = languages.find(
-    (lang: LanguageMetadata) =>
-      getLanguageDisplayName(lang) === targetLanguagePick
-  );
-  if (!targetLanguage) {
-    return;
-  }
+  let targetLanguage: LanguageMetadata;
 
-  // Add project status to the selected languages
-  targetLanguage.projectStatus = LanguageProjectStatus.TARGET;
+  if (targetLanguagePick === "$(add) Custom Language") {
+    const customLanguage = await vscode.window.showInputBox({
+      prompt: "Enter custom language name",
+      placeHolder: "e.g., My Custom Language",
+    });
+
+    if (!customLanguage) {
+      return;
+    }
+
+    targetLanguage = {
+      name: {
+        "en": customLanguage,
+      },
+      tag: "custom",
+      refName: customLanguage,
+      projectStatus: LanguageProjectStatus.TARGET,
+    };
+  } else {
+    const selectedLanguage = languages.find(
+      (lang: LanguageMetadata) =>
+        getLanguageDisplayName(lang) === targetLanguagePick
+    );
+
+    if (!selectedLanguage) {
+      return;
+    }
+
+    targetLanguage = {
+      ...selectedLanguage,
+      projectStatus: LanguageProjectStatus.TARGET,
+    };
+  }
 
   return {
     targetLanguage,
   };
 }
+
 export async function promptForSourceLanguage(): Promise<
   ProjectDetails | undefined
 > {
   const languages = LanguageCodes;
-  const sourceLanguagePick = await vscode.window.showQuickPick(
-    languages.map((lang: LanguageMetadata) => `${lang.refName} (${lang.tag})`),
-    {
-      placeHolder: "Select the source language",
-    }
-  );
+  
+  function getLanguageDisplayName(lang: LanguageMetadata): string {
+    return `${lang.refName} (${lang.tag})`;
+  }
+
+  const quickPickItems = [
+    ...languages.map(getLanguageDisplayName),
+    "$(add) Custom Language"
+  ];
+
+  const sourceLanguagePick = await vscode.window.showQuickPick(quickPickItems, {
+    placeHolder: "Select the source language or choose custom",
+    matchOnDescription: true,
+    matchOnDetail: true,
+  });
+
   if (!sourceLanguagePick) {
     return;
   }
 
-  const sourceLanguage = languages.find(
-    (lang: LanguageMetadata) =>
-      `${lang.refName} (${lang.tag})` === sourceLanguagePick
-  );
-  if (!sourceLanguage) {
-    return;
+  let sourceLanguage: LanguageMetadata;
+
+  if (sourceLanguagePick === "$(add) Custom Language") {
+    const customLanguage = await vscode.window.showInputBox({
+      prompt: "Enter custom language name",
+      placeHolder: "e.g., My Custom Language",
+    });
+
+    if (!customLanguage) {
+      return;
+    }
+
+    sourceLanguage = {
+      name: {
+        "en": customLanguage,
+      },
+      tag: "custom",
+      refName: customLanguage,
+      projectStatus: LanguageProjectStatus.SOURCE,
+    };
+  } else {
+    const selectedLanguage = languages.find(
+      (lang: LanguageMetadata) =>
+        getLanguageDisplayName(lang) === sourceLanguagePick
+    );
+
+    if (!selectedLanguage) {
+      return;
+    }
+
+    sourceLanguage = {
+      ...selectedLanguage,
+      projectStatus: LanguageProjectStatus.SOURCE,
+    };
   }
 
-  // Add project status to the selected languages
-  sourceLanguage.projectStatus = LanguageProjectStatus.SOURCE;
-
   return {
-    // projectName,
-    // projectCategory,
-    // userName,
-    // abbreviation,
     sourceLanguage,
   };
 }
@@ -97,13 +159,13 @@ export function generateProjectScope(
 
   skipNonCanonical
     ? books
-        .filter((book) => !nonCanonicalBookRefs.includes(book))
-        .forEach((book) => {
-          projectScope[book] = [];
-        })
-    : books.forEach((book) => {
+      .filter((book) => !nonCanonicalBookRefs.includes(book))
+      .forEach((book) => {
         projectScope[book] = [];
-      });
+      })
+    : books.forEach((book) => {
+      projectScope[book] = [];
+    });
   return projectScope;
 }
 

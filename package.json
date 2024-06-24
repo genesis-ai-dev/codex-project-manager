@@ -5,7 +5,7 @@
   "author": {
     "name": "BiblioNexus Foundation"
   },
-  "version": "0.0.9",
+  "version": "0.0.10",
   "publisher": "project-accelerate",
   "homepage": "https://codex-editor.gitbook.io/",
   "license": "MIT",
@@ -216,12 +216,34 @@
         "codex-project-manager.sourceLanguage": {
           "type": "object",
           "default": {},
-          "description": "Source language for the project"
+          "description": "Source language for the project",
+          "properties": {
+            "tag": {
+              "type": "string"
+            },
+            "refName": {
+              "type": "string"
+            },
+            "projectStatus": {
+              "type": "string"
+            }
+          }
         },
         "codex-project-manager.targetLanguage": {
           "type": "object",
           "default": {},
-          "description": "Target language for the project"
+          "description": "Target language for the project",
+          "properties": {
+            "tag": {
+              "type": "string"
+            },
+            "refName": {
+              "type": "string"
+            },
+            "projectStatus": {
+              "type": "string"
+            }
+          }
         }
       }
     }
