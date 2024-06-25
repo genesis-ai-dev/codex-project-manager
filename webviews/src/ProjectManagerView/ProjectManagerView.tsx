@@ -149,7 +149,7 @@ function App() {
               {projectOverview.abbreviation?.toString() ?? ''}
             </VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="3">
-              <VSCodeButton onClick={() => handleAction('changeAbbreviation')}>
+              <VSCodeButton onClick={() => handleAction('openAISettings')}>
                 <i className="codicon codicon-pencil"></i>
               </VSCodeButton>
             </VSCodeDataGridCell>
@@ -161,7 +161,7 @@ function App() {
               {String(projectOverview.category) ?? ''}
             </VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="3">
-              <VSCodeButton onClick={() => handleAction('changeCategory')}>
+              <VSCodeButton onClick={() => handleAction('openAISettings')}>
                 <i className="codicon codicon-pencil"></i>
               </VSCodeButton>
             </VSCodeDataGridCell>
