@@ -208,7 +208,7 @@ export async function activate(context: vscode.ExtensionContext) {
       executeWithRedirecting(async () => {
         const metadata = await accessMetadataFile();
         if (!metadata?.languages?.find((lang: { projectStatus: LanguageProjectStatus }) => lang.projectStatus === LanguageProjectStatus.SOURCE)) {
-          vscode.commands.executeCommand("codex-project-manager.showModalNotification");
+          vscode.commands.executeCommand("codex-project-manager.showProjectOverview");
           return;
         }
         const config = vscode.workspace.getConfiguration();
@@ -252,7 +252,7 @@ export async function activate(context: vscode.ExtensionContext) {
       executeWithRedirecting(async () => {
         const metadata = await accessMetadataFile();
         if (!metadata?.meta?.generator?.userName || metadata?.meta?.generator?.userName === "") {
-          vscode.commands.executeCommand("codex-project-manager.showModalNotification");
+          vscode.commands.executeCommand("codex-project-manager.showProjectOverview");
           return;
         }
         try {
@@ -278,7 +278,7 @@ export async function activate(context: vscode.ExtensionContext) {
       executeWithRedirecting(async () => {
         const metadata = await accessMetadataFile();
         if (!metadata?.languages?.find((lang: { projectStatus: LanguageProjectStatus }) => lang.projectStatus === LanguageProjectStatus.TARGET)) {
-          vscode.commands.executeCommand("codex-project-manager.showModalNotification");
+          vscode.commands.executeCommand("codex-project-manager.showProjectOverview");
           return;
         }
         await createProjectFiles({ shouldImportUSFM: false });
@@ -292,7 +292,7 @@ export async function activate(context: vscode.ExtensionContext) {
       executeWithRedirecting(async () => {
         const metadata = await accessMetadataFile();
         if (!metadata?.languages?.find((lang: { projectStatus: LanguageProjectStatus }) => lang.projectStatus === LanguageProjectStatus.TARGET)) {
-          vscode.commands.executeCommand("codex-project-manager.showModalNotification");
+          vscode.commands.executeCommand("codex-project-manager.showProjectOverview");
           return;
         }
         await createProjectFiles({ shouldImportUSFM: true });
@@ -341,7 +341,7 @@ export async function activate(context: vscode.ExtensionContext) {
       executeWithRedirecting(async (commandOnly: boolean = false) => {
         const metadata = await accessMetadataFile();
         if (!metadata?.projectName || metadata?.projectName === "") {
-          vscode.commands.executeCommand("codex-project-manager.showModalNotification");
+          vscode.commands.executeCommand("codex-project-manager.showProjectOverview");
           return;
         }
         const isMetadataInitialized = await checkIfMetadataIsInitialized();
@@ -408,39 +408,58 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "codex-project-manager.startTranslating",
       executeWithRedirecting(async () => {
-        if (!isProjectInitialized) {
-          vscode.commands.executeCommand("codex-project-manager.showModalNotification");
-          return;
+        // check 
+        // if (!isProjectInitialized) {
+        //   await vscode.commands.executeCommand("codex-project-manager.showProjectOverview");
+        //   return;
+        // }
+
+        const projectOverview = await getProjectOverview();
+        const isProjectHealthy = projectOverview.projectName &&
+          projectOverview.sourceLanguage &&
+          projectOverview.targetLanguage &&
+          projectOverview.userName;
+
+        if (isProjectHealthy) {
+          const matCodexUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, 'files', 'target', 'MAT.codex');
+          try {
+            const document = await vscode.workspace.openNotebookDocument(matCodexUri, 'codex-type');
+            await vscode.window.showNotebookDocument(document);
+            // Scroll to Chapter 1
+            const chapter1Cell = document.cellAt(0);
+            if (chapter1Cell) {
+              vscode.commands.executeCommand('revealLine', { lineNumber: 0, at: 'top' });
+            }
+          } catch (error) {
+            console.error('Failed to open MAT.codex:', error);
+            vscode.window.showErrorMessage('Failed to open MAT.codex. Please ensure the file exists and the Codex Notebook extension is installed.');
+          }
+        } else {
+          // Open and focus the project manager panel
+          await vscode.commands.executeCommand('codex-project-manager.showProjectOverview');
         }
-        const bookRefs = Object.keys(vrefData);
-        const bookNames = bookRefs.map((ref) => vrefData[ref].name);
-        const selectedBook =
-          bookNames ?? vscode.window.showQuickPick(bookNames);
-        if (selectedBook) {
-          vscode.commands.executeCommand(
-            "workbench.view.extension.scripture-explorer-activity-bar"
-          );
-          vscode.commands.executeCommand("workbench.action.focusAuxiliaryBar");
-          vscode.commands.executeCommand(
-            "codex-editor.setEditorFontToTargetLanguage"
-          );
-        }
+
         isWalkthroughCompleted = true;
         context.workspaceState.update('isWalkthroughCompleted', true);
-      }
-      ),
-      // Register command to show modal notification
-      vscode.commands.registerCommand(
-        "codex-project-manager.showModalNotification",
-        async () => {
-          await vscode.window.showInformationMessage(
-            "You must complete the previous step before proceeding.",
-            { modal: true },
-            "OK"
-          );
-
-        })
+      })
     ),
+
+    // Register command to show project overview
+    vscode.commands.registerCommand(
+      "codex-project-manager.showProjectOverview",
+      async () => {
+        await vscode.commands.executeCommand('workbench.view.extension.project-manager');
+        await vscode.commands.executeCommand('workbench.action.focusAuxiliaryBar');
+
+        // Get the provider instance
+        const provider = (vscode.window as any).activeCustomEditorWebviewPanel;
+        if (provider && provider.ensureWebviewReady) {
+          await provider.ensureWebviewReady();
+          await provider.updateProjectOverview();
+        }
+      }
+    ),
+
     // Register event listener for configuration changes
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration("codex-project-manager")) {
@@ -455,7 +474,6 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.executeCommand("workbench.action.openSettings", "translators-copilot");
       }
     ),
-
 
   );
 

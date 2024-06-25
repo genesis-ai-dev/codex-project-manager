@@ -1,22 +1,7 @@
 import * as vscode from "vscode";
 import { jumpToCellInNotebook } from "../../utils";
-import { LanguageMetadata, LanguageProjectStatus } from "codex-types";
 import { ProjectOverview } from "../../../types";
 import { getProjectOverview } from "../../utils/projectUtils";
-
-const abortController: AbortController | null = null;
-
-interface OpenFileMessage {
-  command: "openFileAtLocation";
-  uri: string;
-  word: string;
-}
-
-interface searchCommand {
-  command: "searchResources";
-  query: string;
-  database: string;
-}
 
 async function simpleOpen(uri: string) {
   try {
@@ -141,35 +126,38 @@ const loadWebviewHtml = (
   webviewView.webview.html = html;
 };
 
-export class CustomWebviewProvider {
-  _context: vscode.ExtensionContext;
-  selectionChangeListener: any;
+export class CustomWebviewProvider implements vscode.WebviewViewProvider {
+  private _view?: vscode.WebviewView;
+  private _context: vscode.ExtensionContext;
+  private _projectOverview?: ProjectOverview;
+
   constructor(context: vscode.ExtensionContext) {
     this._context = context;
   }
 
   async resolveWebviewView(webviewView: vscode.WebviewView) {
+    this._view = webviewView;
     loadWebviewHtml(webviewView, this._context.extensionUri);
 
-    if (webviewView.visible) {
-      // Send initial project overview
-      const projectOverview = await getProjectOverview();
-      webviewView.webview.postMessage({
-        command: "projectOverview",
-        projectOverview,
+    // Wait for the webview to signal it's ready
+    await new Promise<void>((resolve) => {
+      const readyListener = webviewView.webview.onDidReceiveMessage((message) => {
+        if (message.command === 'webviewReady') {
+          resolve();
+          readyListener.dispose();
+        }
       });
-    }
+    });
+
+    // Initial project overview fetch
+    await this.updateProjectOverview();
 
     // Add message listener
     webviewView.webview.onDidReceiveMessage(async (message: any) => {
       switch (message.command) {
         case "requestProjectOverview":
-          const projectOverview = await getProjectOverview();
-          console.log("requestProjectOverview called", { projectOverview });
-          webviewView.webview.postMessage({
-            command: "sendProjectOverview",
-            projectOverview,
-          });
+          console.log("requestProjectOverview called in provider");
+          await this.updateProjectOverview(true);
           break;
         case "openProjectSettings":
           vscode.commands.executeCommand(
@@ -220,26 +208,52 @@ export class CustomWebviewProvider {
           vscode.window.showInformationMessage(`Opening bible: ${JSON.stringify(message)}`);
           simpleOpen(message.data.path);
           break;
+        case "webviewReady":
+          break;
         default:
           console.error(`Unknown command: ${message.command}`);
       }
     });
+
+    // Set up a listener for configuration changes
+    vscode.workspace.onDidChangeConfiguration(async (event) => {
+      if (event.affectsConfiguration('codex-project-manager')) {
+        await this.updateProjectOverview();
+      }
+    });
+  }
+
+  private webviewHasInitialProjectOverviewData: boolean = false;
+
+  private async updateProjectOverview(force: boolean = false) {
+    const newProjectOverview = await getProjectOverview();
+    if (!this.webviewHasInitialProjectOverviewData || force) {
+      console.log("Sending initial project overview data to webview");
+      this._view?.webview.postMessage({
+        command: "sendProjectOverview",
+        data: newProjectOverview,
+      });
+      this.webviewHasInitialProjectOverviewData = true;
+    }
+    else if (JSON.stringify(newProjectOverview) !== JSON.stringify(this._projectOverview)) {
+      this._projectOverview = newProjectOverview;
+      this._view?.webview.postMessage({
+        command: "sendProjectOverview",
+        projectOverview: this._projectOverview,
+      });
+    }
   }
 }
 
 export function registerProjectManagerViewWebviewProvider(
   context: vscode.ExtensionContext
 ) {
-  const item = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Right
-  );
+  const provider = new CustomWebviewProvider(context);
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       "project-manager-sidebar",
-      new CustomWebviewProvider(context)
+      provider
     )
   );
-
-  item.show();
 }
