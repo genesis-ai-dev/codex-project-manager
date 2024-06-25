@@ -1,232 +1,221 @@
-import { useEffect } from "react";
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
+import { useEffect, useState, useCallback } from 'react';
+import {
+  VSCodeButton,
+  VSCodeDataGrid,
+  VSCodeDataGridCell,
+  VSCodeDataGridRow,
+} from '@vscode/webview-ui-toolkit/react';
+import { ProjectOverview } from '../../../types';
 
 const vscode = acquireVsCodeApi();
 
-interface AccountButtonProps {
-  iconClass: string;
-  onClick: () => void;
-  buttonDescriptionText: string;
-  buttonIcon?: string;
-  outerContainerStyles?: React.CSSProperties;
-}
-
-const AccountButton: React.FC<AccountButtonProps> = ({
-  iconClass,
-  onClick,
-  buttonDescriptionText,
-  buttonIcon = "codicon-pencil",
-  outerContainerStyles = {},
-}) => {
-  return (
-    <div
-      style={{
-        width: "100%",
-        marginBottom: "1rem",
-        ...outerContainerStyles,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
-          flexWrap: "nowrap",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            gap: "10px",
-            alignItems: "center",
-          }}
-        >
-          <i
-            className={`codicon ${iconClass}`}
-            style={{
-              fontSize: "200%",
-              padding: "0.5rem 0",
-              color: "var(--button-primary-hover-background)",
-              height: "max-content",
-            }}
-          ></i>
-          <p>{buttonDescriptionText}</p>
-        </div>
-
-        <VSCodeButton
-          onClick={onClick}
-          style={{
-            height: "max-content",
-          }}
-        >
-          <i
-            className={`codicon ${buttonIcon}`}
-            style={{
-              // fontSize: "200%",
-              padding: "0.5rem 0",
-              // color: "var(--button-primary-hover-background)",
-            }}
-          ></i>
-        </VSCodeButton>
-      </div>
-      <hr
-        style={{
-          width: "100%",
-          border: "1px solid var(--vscode-editor-foreground)",
-        }}
-      />
-    </div>
-  );
-};
-
 function App() {
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      const message = event.data;
-      switch (message.command) {
-        case "stuff": {
-          break;
-        }
-        default:
-          break;
+  const [projectOverview, setProjectOverview] =
+    useState<ProjectOverview | null>(null);
+
+  const handleMessage = useCallback((event: MessageEvent) => {
+    console.log('Received message:', event.data);
+    const message = event.data;
+    switch (message.command) {
+      case 'sendProjectOverview': {
+        console.log('Setting project overview:', message.projectOverview);
+        setProjectOverview(message.projectOverview);
+        break;
       }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
+      default:
+        console.log('Unhandled message command:', message.command);
+        break;
+    }
   }, []);
 
+  useEffect(() => {
+    // Request project overview on component mount
+    vscode.postMessage({ command: 'requestProjectOverview' });
+
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [handleMessage]);
+
+  // Log state changes
+  useEffect(() => {
+    console.log('Project Overview updated:', projectOverview);
+  }, [projectOverview]);
+
+  const handleAction = (command: string) => {
+    vscode.postMessage({ command });
+  };
+
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "start",
-        alignItems: "center",
-        height: "100vh",
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'start',
+        alignItems: 'center',
+        height: '100vh',
       }}
     >
       <i
         className="codicon codicon-tools"
         style={{
-          fontSize: "500%",
-          color: "var(--button-primary-background)",
+          fontSize: '300%',
+          color: 'var(--button-primary-background)',
         }}
       ></i>
-      <hr
-        style={{
-          marginBottom: "5vh",
-          width: "100%",
-          border: "1px solid var(--button-primary-background)",
-        }}
-      />
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "start",
-          alignItems: "center",
-          flexDirection: "column",
-          height: "100%",
-          width: "100%",
-          padding: "0 2rem",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            flex: 1,
-            width: "100%",
-          }}
-        >
-          <AccountButton
-            iconClass="codicon-whole-word"
-            onClick={() =>
-              vscode.postMessage({
-                command: "renameProject",
-              })
-            }
-            buttonDescriptionText="Rename Project"
-          />
-          <AccountButton
-            iconClass="codicon-account"
-            onClick={() =>
-              vscode.postMessage({
-                command: "changeUserName",
-              })
-            }
-            buttonDescriptionText="Change User Name"
-          />
-          <AccountButton
-            iconClass="codicon-source-control"
-            onClick={() =>
-              vscode.postMessage({
-                command: "changeSourceLanguage",
-              })
-            }
-            buttonDescriptionText="Change Source Language"
-          />
-          <AccountButton
-            iconClass="codicon-globe"
-            onClick={() =>
-              vscode.postMessage({
-                command: "changeTargetLanguage",
-              })
-            }
-            buttonDescriptionText="Change Target Language"
-          />
-          <AccountButton
-            iconClass="codicon-cloud-download"
-            onClick={() =>
-              vscode.postMessage({
-                command: "downloadSourceTextBibles",
-              })
-            }
-            buttonDescriptionText="Download Source Text Bibles"
-            buttonIcon="codicon-arrow-down"
-          />
-          <AccountButton
-            iconClass="codicon-cloud-download"
-            onClick={() =>
-              vscode.postMessage({
-                command: "downloadTargetTextBibles",
-              })
-            }
-            buttonDescriptionText="Download Target Text Bibles"
-            buttonIcon="codicon-arrow-down"
-          />
-          <AccountButton
-            iconClass="codicon-terminal"
-            onClick={() =>
-              vscode.postMessage({
-                command: "openAISettings",
-              })
-            }
-            buttonDescriptionText="Open Copilot Settings"
-            buttonIcon="codicon-settings"
-          />
-        </div>
+      {projectOverview ? (
+        <VSCodeDataGrid grid-template-columns="1fr 1fr auto">
+          {/* <VSCodeDataGridRow row-type="header">
+            <VSCodeDataGridCell cell-type="columnheader" grid-column="1">
+              Property
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell cell-type="columnheader" grid-column="2">
+              Value
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell cell-type="columnheader" grid-column="3">
+              Action
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow> */}
 
-        <AccountButton
-          iconClass="codicon-book"
-          onClick={() =>
-            vscode.postMessage({
-              command: "createNewProject",
-            })
-          }
-          buttonDescriptionText="Create New Project"
-          buttonIcon="codicon-plus"
-          outerContainerStyles={{
-            paddingTop: "10vh",
-          }}
-        />
-      </div>
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell grid-column="1">
+              Project Name
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="2">
+              {projectOverview.projectName ?? ''}
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="3">
+              <VSCodeButton onClick={() => handleAction('renameProject')}>
+                <i className="codicon codicon-pencil"></i>
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell grid-column="1">User Name</VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="2">
+              {projectOverview.userName ?? ''}
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="3">
+              <VSCodeButton onClick={() => handleAction('changeUserName')}>
+                <i className="codicon codicon-account"></i>
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell grid-column="1">
+              Source Language
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="2">
+              {projectOverview.sourceLanguage
+                ? Object.entries(projectOverview.sourceLanguage)[0][1]
+                : ''}
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="3">
+              <VSCodeButton
+                onClick={() => handleAction('changeSourceLanguage')}
+              >
+                <i className="codicon codicon-source-control"></i>
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell grid-column="1">
+              Target Language
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="2">
+              {projectOverview.targetLanguage
+                ? Object.entries(projectOverview.targetLanguage)[0][1]
+                : ''}
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="3">
+              <VSCodeButton
+                onClick={() => handleAction('changeTargetLanguage')}
+              >
+                <i className="codicon codicon-globe"></i>
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell grid-column="1">
+              Abbreviation
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="2">
+              {projectOverview.abbreviation?.toString() ?? ''}
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="3">
+              <VSCodeButton onClick={() => handleAction('changeAbbreviation')}>
+                <i className="codicon codicon-pencil"></i>
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell grid-column="1">Category</VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="2">
+              {String(projectOverview.category) ?? ''}
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="3">
+              <VSCodeButton onClick={() => handleAction('changeCategory')}>
+                <i className="codicon codicon-pencil"></i>
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell grid-column="1">
+              Source Text Bibles
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="2">-</VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="3">
+              <VSCodeButton
+                onClick={() => handleAction('downloadSourceTextBibles')}
+              >
+                <i className="codicon codicon-cloud-download"></i>
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell grid-column="1">
+              Target Text Bibles
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="2">-</VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="3">
+              <VSCodeButton
+                onClick={() => handleAction('downloadTargetTextBibles')}
+              >
+                <i className="codicon codicon-cloud-download"></i>
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell grid-column="1">
+              Copilot Settings
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="2">-</VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="3">
+              <VSCodeButton onClick={() => handleAction('openAISettings')}>
+                <i className="codicon codicon-settings"></i>
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+        </VSCodeDataGrid>
+      ) : (
+        'No project overview'
+      )}
+      <VSCodeButton
+        onClick={() => handleAction('createNewProject')}
+        style={{ marginTop: '2rem' }}
+      >
+        <i className="codicon codicon-plus"></i> Create New Project
+      </VSCodeButton>
     </div>
   );
 }

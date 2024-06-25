@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import { jumpToCellInNotebook } from "../../utils";
+import { LanguageMetadata, LanguageProjectStatus } from "codex-types";
+import { ProjectOverview } from "../../../types";
 
 const abortController: AbortController | null = null;
 
@@ -55,6 +57,26 @@ async function jumpToFirstOccurrence(uri: string, word: string) {
   vscode.window.showInformationMessage(
     `Jumped to the first occurrence of "${word}"`
   );
+}
+
+async function getProjectOverview(): Promise<ProjectOverview> {
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    throw new Error("No workspace folder found");
+  }
+
+  const metadataUri = vscode.Uri.joinPath(workspaceFolder.uri, "metadata.json");
+  const metadataContent = await vscode.workspace.fs.readFile(metadataUri);
+  const metadata = JSON.parse(metadataContent.toString());
+
+  return {
+    projectName: metadata.projectName,
+    abbreviation: metadata.abbreviation,
+    sourceLanguage: metadata.languages.find((lang: LanguageMetadata) => lang.projectStatus === LanguageProjectStatus.SOURCE),
+    targetLanguage: metadata.languages.find((lang: LanguageMetadata) => lang.projectStatus === LanguageProjectStatus.TARGET),
+    category: metadata.meta.category,
+    userName: metadata.meta.generator.userName,
+  };
 }
 
 const loadWebviewHtml = (
@@ -118,8 +140,7 @@ const loadWebviewHtml = (
       Use a content security policy to only allow loading images from https or from our extension directory,
       and only allow scripts that have a specific nonce.
     -->
-    <meta http-equiv="Content-Security-Policy" content="img-src https: data:; style-src 'unsafe-inline' ${
-      webviewView.webview.cspSource
+    <meta http-equiv="Content-Security-Policy" content="img-src https: data:; style-src 'unsafe-inline' ${webviewView.webview.cspSource
     }; script-src 'nonce-${nonce}';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="${styleResetUri}" rel="stylesheet">
@@ -137,58 +158,6 @@ const loadWebviewHtml = (
   </html>`;
 
   webviewView.webview.html = html;
-  webviewView.webview.onDidReceiveMessage(async (message: any) => {
-    // Changed the type to any to handle multiple message types
-    switch (message.command) {
-      case "openProjectSettings":
-        vscode.commands.executeCommand(
-          "codex-project-manager.editProjectSettings"
-        );
-        break;
-      case "renameProject":
-        vscode.commands.executeCommand(
-          "codex-project-manager.nameProject",
-          true
-        );
-        break;
-      case "changeUserName":
-        vscode.commands.executeCommand("codex-project-manager.userName", true);
-        break;
-      case "changeSourceLanguage":
-        console.log("changeSourceLanguage called");
-        vscode.commands.executeCommand(
-          "codex-project-manager.promptUserForSourceLanguage"
-        );
-        break;
-      case "changeTargetLanguage":
-        vscode.commands.executeCommand(
-          "codex-project-manager.promptUserForTargetLanguage"
-        );
-        break;
-      case "downloadTargetTextBibles":
-        vscode.commands.executeCommand(
-          "codex-project-manager.downloadTargetTextBibles"
-        );
-        break;
-      case "openAISettings":
-        vscode.commands.executeCommand(
-          "codex-project-manager.openAISettings"
-        );
-        break;
-      case "downloadSourceTextBibles":
-        vscode.commands.executeCommand(
-          "codex-project-manager.downloadSourceTextBibles"
-        );
-        break;
-      case "createNewProject":
-        vscode.commands.executeCommand(
-          "codex-project-manager.startWalkthrough"
-        );
-        break;
-      default:
-        console.error(`Unknown command: ${message.command}`);
-    }
-  });
 };
 
 export class CustomWebviewProvider {
@@ -198,13 +167,78 @@ export class CustomWebviewProvider {
     this._context = context;
   }
 
-  resolveWebviewView(webviewView: vscode.WebviewView) {
+  async resolveWebviewView(webviewView: vscode.WebviewView) {
     loadWebviewHtml(webviewView, this._context.extensionUri);
 
     if (webviewView.visible) {
-      // sendCommentsToWebview(webviewView);
-      // TODO: send verse parallels
+      // Send initial project overview
+      const projectOverview = await getProjectOverview();
+      webviewView.webview.postMessage({
+        command: "projectOverview",
+        projectOverview,
+      });
     }
+
+    // Add message listener
+    webviewView.webview.onDidReceiveMessage(async (message: any) => {
+      switch (message.command) {
+        case "requestProjectOverview":
+          const projectOverview = await getProjectOverview();
+          console.log("requestProjectOverview called", { projectOverview });
+          webviewView.webview.postMessage({
+            command: "sendProjectOverview",
+            projectOverview,
+          });
+          break;
+        case "openProjectSettings":
+          vscode.commands.executeCommand(
+            "codex-project-manager.editProjectSettings"
+          );
+          break;
+        case "renameProject":
+          vscode.commands.executeCommand(
+            "codex-project-manager.nameProject",
+            true
+          );
+          break;
+        case "changeUserName":
+          vscode.commands.executeCommand("codex-project-manager.userName", true);
+          break;
+        case "changeSourceLanguage":
+          console.log("changeSourceLanguage called");
+          vscode.commands.executeCommand(
+            "codex-project-manager.promptUserForSourceLanguage"
+          );
+          break;
+        case "changeTargetLanguage":
+          vscode.commands.executeCommand(
+            "codex-project-manager.promptUserForTargetLanguage"
+          );
+          break;
+        case "downloadTargetTextBibles":
+          vscode.commands.executeCommand(
+            "codex-project-manager.downloadTargetTextBibles"
+          );
+          break;
+        case "openAISettings":
+          vscode.commands.executeCommand(
+            "codex-project-manager.openAISettings"
+          );
+          break;
+        case "downloadSourceTextBibles":
+          vscode.commands.executeCommand(
+            "codex-project-manager.downloadSourceTextBibles"
+          );
+          break;
+        case "createNewProject":
+          vscode.commands.executeCommand(
+            "codex-project-manager.startWalkthrough"
+          );
+          break;
+        default:
+          console.error(`Unknown command: ${message.command}`);
+      }
+    });
   }
 }
 

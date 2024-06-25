@@ -1,8 +1,17 @@
-import { Dictionary } from "codex-types";
+import { Dictionary, LanguageMetadata } from "codex-types";
 import * as vscode from "vscode";
 interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
+}
+
+interface ProjectOverview {
+  projectName: string;
+  abbreviation: string;
+  sourceLanguage: LanguageMetadata;
+  targetLanguage: LanguageMetadata;
+  category: string;
+  userName: string;
 }
 
 interface ChatMessageWithContext extends ChatMessage {

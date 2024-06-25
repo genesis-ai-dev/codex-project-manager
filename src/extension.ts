@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { LanguageProjectStatus } from "codex-types";
+import { LanguageMetadata, LanguageProjectStatus } from "codex-types";
 
 import {
   ProjectDetails,
@@ -18,8 +18,8 @@ import {
   // setSourceAndTargetLanguage,
   setTargetFont,
 } from "./utils/projectInitializers";
-import { migration_changeDraftFolderToFilesFolder } from "./utils/migartionUtils";
-import { registerProjectManagerViewWebviewProvider } from "./providers/parallelPassagesWebview/customParallelPassagesWebviewProvider";
+import { migration_changeDraftFolderToFilesFolder } from "./utils/migrationUtils";
+import { registerProjectManagerViewWebviewProvider } from "./providers/projectManagerViewProvider/projectManagerViewProvider";
 import { configureAutoSave } from "./utils/fileUtils";
 
 const checkIfMetadataIsInitialized = async (): Promise<boolean> => {
@@ -75,15 +75,15 @@ async function accessMetadataFile() {
 }
 
 async function reopenWalkthrough() {
-    
+
   await vscode.commands.executeCommand("workbench.action.closeAllGroups");
-    
+
   await vscode.window.showInformationMessage(
     "You must complete the walkthrough before proceeding.",
     { modal: true },
     "OK"
   );
-    
+
   //reopens the walkthrough in the current editor group
   await vscode.commands.executeCommand(
     "workbench.action.openWalkthrough",
@@ -126,42 +126,42 @@ export async function activate(context: vscode.ExtensionContext) {
       redirecting = true;
       await reopenWalkthrough();
       redirecting = false;
-    } 
+    }
   };
 
-  
+
   // Delay registration of event listeners to avoid triggering on startup
   //setTimeout(async () => {
 
-    console.log("Registering event listeners...");
-    // Check if workspace folders are open
-    if (
-      !vscode.workspace.workspaceFolders ||
-      vscode.workspace.workspaceFolders.length === 0 ||
-      vscode.workspace.workspaceFolders[0].uri.fsPath === ""
-    ) {
-      // Start the walkthrough if no workspace folders are open
-      vscode.commands.executeCommand("codex-project-manager.startWalkthrough");
-    }
+  console.log("Registering event listeners...");
+  // Check if workspace folders are open
+  if (
+    !vscode.workspace.workspaceFolders ||
+    vscode.workspace.workspaceFolders.length === 0 ||
+    vscode.workspace.workspaceFolders[0].uri.fsPath === ""
+  ) {
+    // Start the walkthrough if no workspace folders are open
+    vscode.commands.executeCommand("codex-project-manager.startWalkthrough");
+  }
 
-    // handle when any file or any other extension webview is opened
-    vscode.window.onDidChangeVisibleTextEditors(async (editors) => {
-      for (const editor of editors) {
-        await handleEditorChange(editor);
-      }
-    });
-//}, 3000);
+  // handle when any file or any other extension webview is opened
+  vscode.window.onDidChangeVisibleTextEditors(async (editors) => {
+    for (const editor of editors) {
+      await handleEditorChange(editor);
+    }
+  });
+  //}, 3000);
 
   // Register commands
   vscode.commands.registerCommand(
     "codex-project-manager.openAutoSaveSettings",
-    executeWithRedirecting( async () => {
+    executeWithRedirecting(async () => {
       await vscode.commands.executeCommand(
         "workbench.action.openSettings",
         "@files.autoSave"
       );
     }
-  ));
+    ));
   vscode.commands.registerCommand(
     "codex-project-manager.downloadSourceTextBibles",
     () => downloadBible("source")
@@ -170,13 +170,13 @@ export async function activate(context: vscode.ExtensionContext) {
     "codex-project-manager.downloadTargetTextBibles",
     async () => {
       const bibleFile = await downloadBible("target");
-      const response = await vscode.window.showInformationMessage("Would you like to load target text into the project?", 
-      { modal: true }, 
-      "Yes");
+      const response = await vscode.window.showInformationMessage("Would you like to load target text into the project?",
+        { modal: true },
+        "Yes");
       if (response === "Yes") {
         parseAndReplaceBibleFile(bibleFile, true);
         vscode.window.showInformationMessage("Target text bible loaded.");
-      } else{
+      } else {
         parseAndReplaceBibleFile(bibleFile, false);
         vscode.window.showInformationMessage("Target text bible not loaded.");
 
@@ -416,18 +416,18 @@ export async function activate(context: vscode.ExtensionContext) {
         isWalkthroughCompleted = true;
         context.workspaceState.update('isWalkthroughCompleted', true);
       }
-    ),
-    // Register command to show modal notification
-    vscode.commands.registerCommand(
-      "codex-project-manager.showModalNotification",
-      async () => {
+      ),
+      // Register command to show modal notification
+      vscode.commands.registerCommand(
+        "codex-project-manager.showModalNotification",
+        async () => {
           await vscode.window.showInformationMessage(
-          "You must complete the previous step before proceeding.",
-          { modal: true },
-          "OK"
-        );
+            "You must complete the previous step before proceeding.",
+            { modal: true },
+            "OK"
+          );
 
-      })
+        })
     ),
     // Register event listener for configuration changes
     vscode.workspace.onDidChangeConfiguration((event) => {
@@ -526,3 +526,4 @@ export function deactivate() {
 function deleteOriginalFiles(bibleFile: string | undefined) {
   throw new Error("Function not implemented.");
 }
+
