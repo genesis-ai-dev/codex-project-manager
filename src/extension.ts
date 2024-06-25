@@ -423,7 +423,7 @@ export async function activate(context: vscode.ExtensionContext) {
         if (isProjectHealthy) {
           const matCodexUri = vscode.Uri.joinPath(vscode.workspace.workspaceFolders![0].uri, 'files', 'target', 'MAT.codex');
           try {
-            const document = await vscode.workspace.openNotebookDocument(matCodexUri, 'codex-type');
+            const document = await vscode.workspace.openNotebookDocument(matCodexUri);
             await vscode.window.showNotebookDocument(document);
             // Scroll to Chapter 1
             const chapter1Cell = document.cellAt(0);
