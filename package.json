@@ -216,12 +216,34 @@
         "codex-project-manager.sourceLanguage": {
           "type": "object",
           "default": {},
-          "description": "Source language for the project"
+          "description": "Source language for the project",
+          "properties": {
+            "tag": {
+              "type": "string"
+            },
+            "refName": {
+              "type": "string"
+            },
+            "projectStatus": {
+              "type": "string"
+            }
+          }
         },
         "codex-project-manager.targetLanguage": {
           "type": "object",
           "default": {},
-          "description": "Target language for the project"
+          "description": "Target language for the project",
+          "properties": {
+            "tag": {
+              "type": "string"
+            },
+            "refName": {
+              "type": "string"
+            },
+            "projectStatus": {
+              "type": "string"
+            }
+          }
         }
       }
     }
@@ -240,7 +262,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.3",
     "@types/node": "18.x",
-    "@types/vscode": "^1.90.0",
+    "@types/vscode": "^1.70.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "@vscode/test-electron": "^2.3.6",
