@@ -174,10 +174,10 @@ export async function activate(context: vscode.ExtensionContext) {
       { modal: true }, 
       "Yes");
       if (response === "Yes") {
-        parseAndReplaceBibleFile(bibleFile);
+        parseAndReplaceBibleFile(bibleFile, true);
         vscode.window.showInformationMessage("Target text bible loaded.");
       } else{
-        deleteOriginalFiles(bibleFile);
+        parseAndReplaceBibleFile(bibleFile, false);
         vscode.window.showInformationMessage("Target text bible not loaded.");
 
       }

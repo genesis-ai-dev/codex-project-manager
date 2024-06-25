@@ -278,39 +278,53 @@ export const projectFileExists = async () => {
   return fileExists;
 };
 
-export async function parseAndReplaceBibleFile(bibleFile: string | undefined) {
+export async function parseAndReplaceBibleFile(bibleFile: string | undefined, replace: boolean) {
   console.log("Starting to parse the Bible file.");
+  
+  // Check if the bibleFile is provided
   if (!bibleFile) {
     console.error("No Bible file provided.");
     return;
   }
   console.log(`Bible file provided: ${bibleFile}`);
 
+  // Replace the file extension from .txt to .bible
   bibleFile = bibleFile.replace(/\.txt$/, '.bible');
 
+  // Get the workspace folders
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders) {
     console.error("No workspace folders found.");
     return;
   }
 
+  // Construct the file path for the Bible file
   const bibleFilePath = vscode.Uri.joinPath(workspaceFolders[0].uri, ".project/targetTextBibles", path.basename(bibleFile));
   console.log(`Constructed file path: ${bibleFilePath}`);
+  
   let bibleData;
   try {
     console.log(`Attempting to read the Bible file from path: ${bibleFilePath}`);
+    // Read the Bible file
     bibleData = await vscode.workspace.fs.readFile(bibleFilePath);
     console.log("Bible file read successfully.");
   } catch (error) {
     console.error("Failed to read the Bible file:", error);
     return;
   }
+
+  // Decode the Bible file content
   const bibleText = new TextDecoder("utf-8").decode(bibleData);
   console.log("Bible text decoded successfully.");
+  
+  // Split the Bible text into lines
   const lines = bibleText.split(/\r?\n/);
   console.log(`Total lines found in the Bible text: ${lines.length}`);
+  
+  // Initialize an object to store the books
   const books: { [key: string]: string[] } = {};
 
+  // Iterate through each line and categorize them by book code
   lines.forEach(line => {
     const bookCode = line.substring(0, 3);
     if (!books[bookCode]) {
@@ -322,12 +336,14 @@ export async function parseAndReplaceBibleFile(bibleFile: string | undefined) {
 
   console.log(`Total books parsed: ${Object.keys(books).length}`);
 
+  // Construct the target folder path for the parsed books
   const targetFolderPath = vscode.Uri.joinPath(
     workspaceFolders[0].uri,
     `.project/targetTextBibles/`,
     path.basename(bibleFile).replace(/\.bible$/, '')
   );
 
+  // Iterate through each book and write its content to a file
   for (const [bookCode, content] of Object.entries(books)) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders) {
@@ -336,27 +352,35 @@ export async function parseAndReplaceBibleFile(bibleFile: string | undefined) {
     }
     console.log(`Using workspace folder: ${workspaceFolders[0].uri.fsPath}`);
 
+    // Construct the target path for the book file
     const targetPath = vscode.Uri.joinPath(
       targetFolderPath,
       `/${bookCode}.txt`
     );
     console.log(`Target path for writing: ${targetPath}`);
+    
     const fileContent = content.join("\n");
     try {
       console.log(`Writing to file for book ${bookCode}`);
+      // Write the book content to the file
       await vscode.workspace.fs.writeFile(targetPath, new TextEncoder().encode(fileContent));
       console.log(`File written for book ${bookCode} at ${targetPath.fsPath}`);
     } catch (error) {
       console.error(`Failed to write file for book ${bookCode}:`, error);
     }
   }
-  createProjectNotebooksFromTxt({
-    shouldOverWrite: true,
-    folderWithTxtToConvert: [
-      targetFolderPath
-    ]
-  });
 
+  // Create project notebooks from the parsed text files
+  if(replace){
+    createProjectNotebooksFromTxt({
+      shouldOverWrite: true,
+      folderWithTxtToConvert: [
+       targetFolderPath
+     ]
+    });
+  }
+
+  // Delete the original Bible file
   await deleteOriginalFiles(bibleFile);
 }
 
