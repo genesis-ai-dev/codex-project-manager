@@ -278,7 +278,7 @@ export const projectFileExists = async () => {
   return fileExists;
 };
 
-export async function parseBibleFile(bibleFile: string | undefined) {
+export async function parseAndReplaceBibleFile(bibleFile: string | undefined) {
   console.log("Starting to parse the Bible file.");
   if (!bibleFile) {
     console.error("No Bible file provided.");
@@ -322,6 +322,12 @@ export async function parseBibleFile(bibleFile: string | undefined) {
 
   console.log(`Total books parsed: ${Object.keys(books).length}`);
 
+  const targetFolderPath = vscode.Uri.joinPath(
+    workspaceFolders[0].uri,
+    `.project/targetTextBibles/`,
+    path.basename(bibleFile).replace(/\.bible$/, '')
+  );
+
   for (const [bookCode, content] of Object.entries(books)) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders) {
@@ -331,8 +337,8 @@ export async function parseBibleFile(bibleFile: string | undefined) {
     console.log(`Using workspace folder: ${workspaceFolders[0].uri.fsPath}`);
 
     const targetPath = vscode.Uri.joinPath(
-      workspaceFolders[0].uri,
-      `.project/targetTextBibles/books/${bookCode}.txt`
+      targetFolderPath,
+      `/${bookCode}.txt`
     );
     console.log(`Target path for writing: ${targetPath}`);
     const fileContent = content.join("\n");
@@ -346,7 +352,29 @@ export async function parseBibleFile(bibleFile: string | undefined) {
   }
   createProjectNotebooksFromTxt({
     shouldOverWrite: true,
-    folderWithTxtToConvert: [vscode.Uri.joinPath(workspaceFolders[0].uri, ".project/targetTextBibles/books")]
-
+    folderWithTxtToConvert: [
+      targetFolderPath
+    ]
   });
+
+  await deleteOriginalFiles(bibleFile);
+}
+
+async function deleteOriginalFiles(bibleFile: string) {
+  if (!vscode.workspace.workspaceFolders) {
+    console.error("No workspace folders found.");
+    return;
+  }
+  const workspaceFolderUri = vscode.workspace.workspaceFolders[0].uri;
+  const bibleFilePath = vscode.Uri.joinPath(workspaceFolderUri, ".project/targetTextBibles", path.basename(bibleFile));
+  try {
+    console.log(`Deleting the original Bible file: ${bibleFilePath.fsPath}`);
+    await vscode.workspace.fs.delete(bibleFilePath);
+    const originalTxtPath = bibleFilePath.with({ path: bibleFilePath.path.replace(/\.bible$/, '.txt') });
+    console.log(`Deleting the original TXT file: ${originalTxtPath.fsPath}`);
+    await vscode.workspace.fs.delete(originalTxtPath);
+    console.log("Original files deleted successfully.");
+  } catch (error) {
+    console.error("Failed to delete original files:", error);
+  }
 }

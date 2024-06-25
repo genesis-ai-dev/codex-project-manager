@@ -8,7 +8,7 @@ import {
   promptForSourceLanguage,
   updateMetadataFile,
   initializeProjectMetadata,
-  parseBibleFile,
+  parseAndReplaceBibleFile,
 } from "./utils/projectUtils";
 import { vrefData } from "./utils/verseRefUtils/verseData";
 import {
@@ -174,9 +174,12 @@ export async function activate(context: vscode.ExtensionContext) {
       { modal: true }, 
       "Yes");
       if (response === "Yes") {
-        // TODO: parse the downloaded *.bible file by book (the first three letters of each line),
-        // put each book into separate new *.codex files, and replace existing files in ./files/target/ with these new files
-        parseBibleFile(bibleFile);
+        parseAndReplaceBibleFile(bibleFile);
+        vscode.window.showInformationMessage("Target text bible loaded.");
+      } else{
+        deleteOriginalFiles(bibleFile);
+        vscode.window.showInformationMessage("Target text bible not loaded.");
+
       }
     }
   );
@@ -518,4 +521,8 @@ async function updateProjectSettings(projectDetails: ProjectDetails) {
 
 export function deactivate() {
   console.log("Codex Project Manager is now deactivated!");
+}
+
+function deleteOriginalFiles(bibleFile: string | undefined) {
+  throw new Error("Function not implemented.");
 }

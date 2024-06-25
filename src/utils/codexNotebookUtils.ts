@@ -249,46 +249,50 @@ export async function createProjectNotebooksFromTxt({
 
       const cells: vscode.NotebookCellData[] = [];
       Object.keys(chapters).forEach(chapter => {
-        // Markdown cell for the chapter heading
-        const chapterHeadingCell = new vscode.NotebookCellData(
-          vscode.NotebookCellKind.Markup,
-          `# Chapter ${chapter}`,
-          "markdown"
-        );
-        chapterHeadingCell.metadata = {
-          type: "chapter-heading",
-          data: {
-            chapter: chapter,
-          },
-        };
-        cells.push(chapterHeadingCell);
+        if (chapters[chapter].length > 1) { // Check if chapter has more than just a verse reference
+          // Markdown cell for the chapter heading
+          const chapterHeadingCell = new vscode.NotebookCellData(
+            vscode.NotebookCellKind.Markup,
+            `# Chapter ${chapter}`,
+            "markdown"
+          );
+          chapterHeadingCell.metadata = {
+            type: "chapter-heading",
+            data: {
+              chapter: chapter,
+            },
+          };
+          cells.push(chapterHeadingCell);
 
-        // Code cell for the chapter content
-        cells.push(new vscode.NotebookCellData(
-          vscode.NotebookCellKind.Code,
-          chapters[chapter].join('\n'),
-          "scripture"
-        ));
+          // Code cell for the chapter content
+          cells.push(new vscode.NotebookCellData(
+            vscode.NotebookCellKind.Code,
+            chapters[chapter].join('\n'),
+            "scripture"
+          ));
 
-        // Markdown cell for notes
-        cells.push(new vscode.NotebookCellData(
-          vscode.NotebookCellKind.Markup,
-          `### Notes for Chapter ${chapter}`,
-          "markdown"
-        ));
+          // Markdown cell for notes
+          cells.push(new vscode.NotebookCellData(
+            vscode.NotebookCellKind.Markup,
+            `### Notes for Chapter ${chapter}`,
+            "markdown"
+          ));
+        }
       });
 
-      const notebookData = new vscode.NotebookData(cells);
-      const serializer = new CodexContentSerializer();
-      const notebookFile = await serializer.serializeNotebook(notebookData, new vscode.CancellationTokenSource().token);
+      if (cells.length > 0) { // Only create a notebook if there are cells to add
+        const notebookData = new vscode.NotebookData(cells);
+        const serializer = new CodexContentSerializer();
+        const notebookFile = await serializer.serializeNotebook(notebookData, new vscode.CancellationTokenSource().token);
 
-      // Save the notebook
-      const notebookPath = `files/target/${path.basename(file, '.txt')}.codex`;
-      return generateFile({
-        filepath: notebookPath,
-        fileContent: notebookFile,
-        shouldOverWrite,
-      });
+        // Save the notebook
+        const notebookPath = `files/target/${path.basename(file, '.txt')}.codex`;
+        return generateFile({
+          filepath: notebookPath,
+          fileContent: notebookFile,
+          shouldOverWrite,
+        });
+      }
     }));
   });
 

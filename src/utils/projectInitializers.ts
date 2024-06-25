@@ -326,7 +326,7 @@ export async function initializeProject(shouldImportUSFM: boolean) {
 
         if (codexFiles.length > 0) {
           const userChoice = await vscode.window.showWarningMessage(
-            "Do you want to overwrite any existing .codex project files?",
+            "Do you want to overwrite existing .codex project files?",
             { modal: true },
             ConfirmationOptions.Yes,
             ConfirmationOptions.No
