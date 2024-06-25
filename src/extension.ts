@@ -9,6 +9,7 @@ import {
   updateMetadataFile,
   initializeProjectMetadata,
   parseAndReplaceBibleFile,
+  getProjectOverview,
 } from "./utils/projectUtils";
 import { vrefData } from "./utils/verseRefUtils/verseData";
 import {
@@ -122,6 +123,17 @@ export async function activate(context: vscode.ExtensionContext) {
   };
   // Redirects the user to the walkthrough if they are not in the walkthrough
   const handleEditorChange = async (editor?: vscode.TextEditor) => {
+    // Check if the project overview data is available and complete
+    const projectOverview = await getProjectOverview();
+    if (
+      projectOverview.projectName &&
+      projectOverview.sourceLanguage &&
+      projectOverview.targetLanguage
+    ) {
+      // If we have essential project data, mark the walkthrough as completed
+      isWalkthroughCompleted = true;
+      await context.workspaceState.update('isWalkthroughCompleted', true);
+    }
     if (!isWalkthroughCompleted && !redirecting) {
       redirecting = true;
       await reopenWalkthrough();
@@ -526,4 +538,6 @@ export function deactivate() {
 function deleteOriginalFiles(bibleFile: string | undefined) {
   throw new Error("Function not implemented.");
 }
+
+
 

@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { LanguageCodes } from "./languageUtils";
 import { createProjectNotebooksFromTxt } from "./codexNotebookUtils";
 import * as path from "path";
+import { ProjectOverview } from "../../types";
 
 export interface ProjectDetails {
   projectName?: string;
@@ -463,4 +464,38 @@ async function deleteOriginalFiles(bibleFile: string) {
   } catch (error) {
     console.error("Failed to delete original files:", error);
   }
+}
+
+export async function getProjectOverview(): Promise<ProjectOverview> {
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    throw new Error("No workspace folder found");
+  }
+
+  const metadataUri = vscode.Uri.joinPath(workspaceFolder.uri, "metadata.json");
+  const metadataContent = await vscode.workspace.fs.readFile(metadataUri);
+  const metadata = JSON.parse(metadataContent.toString());
+
+  // Get a list of URIs for the downloaded source and target Bibles in the project, if any
+  const sourceTextBiblesPath = vscode.Uri.joinPath(workspaceFolder.uri, '.project/sourceTextBibles');
+  const targetTextBiblesPath = vscode.Uri.joinPath(workspaceFolder.uri, '.project/targetTextBibles');
+
+  const sourceTextBibles = await Promise.resolve(vscode.workspace.fs.readDirectory(sourceTextBiblesPath))
+    .then(entries => entries.filter(([name]) => name.endsWith('.bible')).map(([name]) => vscode.Uri.joinPath(sourceTextBiblesPath, name)))
+    .catch(() => []);
+
+  const targetTextBibles = await Promise.resolve(vscode.workspace.fs.readDirectory(targetTextBiblesPath))
+    .then(entries => entries.filter(([name]) => name.endsWith('.bible')).map(([name]) => vscode.Uri.joinPath(targetTextBiblesPath, name)))
+    .catch(() => []);
+
+  return {
+    projectName: metadata.projectName,
+    abbreviation: metadata.abbreviation,
+    sourceLanguage: metadata.languages.find((lang: LanguageMetadata) => lang.projectStatus === LanguageProjectStatus.SOURCE),
+    targetLanguage: metadata.languages.find((lang: LanguageMetadata) => lang.projectStatus === LanguageProjectStatus.TARGET),
+    category: metadata.meta.category,
+    userName: metadata.meta.generator.userName,
+    sourceTextBibles,
+    targetTextBibles
+  };
 }

@@ -12,6 +12,8 @@ interface ProjectOverview {
   targetLanguage: LanguageMetadata;
   category: string;
   userName: string;
+  sourceTextBibles?: vscode.Uri[] | never[];
+  targetTextBibles?: vscode.Uri[] | never[];
 }
 
 interface ChatMessageWithContext extends ChatMessage {
@@ -77,9 +79,9 @@ type CommentPostMessages =
   | { command: "updateCommentThread"; commentThread: NotebookCommentThread }
   | { command: "deleteCommentThread"; commentThreadId: string }
   | {
-      command: "deleteComment";
-      args: { commentId: number; commentThreadId: string };
-    }
+    command: "deleteComment";
+    args: { commentId: number; commentThreadId: string };
+  }
   | { command: "getCurrentVerseRef" }
   | { command: "fetchComments" };
 interface SelectedTextDataWithContext {
@@ -97,11 +99,11 @@ type ChatPostMessages =
   | { command: "fetch"; messages: string }
   | { command: "notifyUserError"; message: string }
   | {
-      command: "updateMessageThread";
-      messages: ChatMessageWithContext[];
-      threadId: string;
-      threadTitle?: string;
-    }
+    command: "updateMessageThread";
+    messages: ChatMessageWithContext[];
+    threadId: string;
+    threadTitle?: string;
+  }
   | { command: "deleteThread"; threadId: string }
   | { command: "fetchThread" }
   | { command: "abort-fetch" }

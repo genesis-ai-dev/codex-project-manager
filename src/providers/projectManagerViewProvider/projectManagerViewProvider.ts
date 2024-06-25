@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { jumpToCellInNotebook } from "../../utils";
 import { LanguageMetadata, LanguageProjectStatus } from "codex-types";
 import { ProjectOverview } from "../../../types";
+import { getProjectOverview } from "../../utils/projectUtils";
 
 const abortController: AbortController | null = null;
 
@@ -57,26 +58,6 @@ async function jumpToFirstOccurrence(uri: string, word: string) {
   vscode.window.showInformationMessage(
     `Jumped to the first occurrence of "${word}"`
   );
-}
-
-async function getProjectOverview(): Promise<ProjectOverview> {
-  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-  if (!workspaceFolder) {
-    throw new Error("No workspace folder found");
-  }
-
-  const metadataUri = vscode.Uri.joinPath(workspaceFolder.uri, "metadata.json");
-  const metadataContent = await vscode.workspace.fs.readFile(metadataUri);
-  const metadata = JSON.parse(metadataContent.toString());
-
-  return {
-    projectName: metadata.projectName,
-    abbreviation: metadata.abbreviation,
-    sourceLanguage: metadata.languages.find((lang: LanguageMetadata) => lang.projectStatus === LanguageProjectStatus.SOURCE),
-    targetLanguage: metadata.languages.find((lang: LanguageMetadata) => lang.projectStatus === LanguageProjectStatus.TARGET),
-    category: metadata.meta.category,
-    userName: metadata.meta.generator.userName,
-  };
 }
 
 const loadWebviewHtml = (
@@ -234,6 +215,10 @@ export class CustomWebviewProvider {
           vscode.commands.executeCommand(
             "codex-project-manager.startWalkthrough"
           );
+          break;
+        case "openBible":
+          vscode.window.showInformationMessage(`Opening bible: ${JSON.stringify(message)}`);
+          simpleOpen(message.data.path);
           break;
         default:
           console.error(`Unknown command: ${message.command}`);
