@@ -33,10 +33,10 @@ export async function ensureVrefList(workspaceRoot: string): Promise<string> {
     return vrefPath;
 }
 
-export async function downloadEBibleText(languageMetadata: EbibleCorpusMetadata, workspaceRoot: string): Promise<string> {
+export async function downloadEBibleText(languageMetadata: EbibleCorpusMetadata, workspaceRoot: string, languageType: string): Promise<string> {
     const fileName = languageMetadata.file;
     const targetDataUrl = `https://raw.githubusercontent.com/BibleNLP/ebible/main/corpus/${fileName}`;
-    const targetPath = path.join(workspaceRoot, ".project", "sourceTextBibles", fileName);
+    const targetPath = path.join(workspaceRoot, ".project", languageType + "TextBibles", fileName);
     await downloadFile(targetDataUrl, targetPath);
     return targetPath;
 }

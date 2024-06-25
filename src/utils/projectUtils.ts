@@ -3,6 +3,8 @@ import { LanguageMetadata, LanguageProjectStatus, Project } from "codex-types";
 import { getAllBookRefs } from "./verseRefUtils";
 import * as vscode from "vscode";
 import { LanguageCodes } from "./languageUtils";
+import { createProjectNotebooksFromTxt } from "./codexNotebookUtils";
+import * as path from "path";
 
 export interface ProjectDetails {
   projectName?: string;
@@ -178,7 +180,7 @@ export async function initializeProjectMetadata(details: ProjectDetails) {
       vscode.workspace
         .getConfiguration("codex-project-manager")
         .get<string>("projectName") ||
-      "Codex Project",
+      "", // previously "Codex Project"
     meta: {
       version: "0.0.0",
       category:
@@ -195,7 +197,7 @@ export async function initializeProjectMetadata(details: ProjectDetails) {
           vscode.workspace
             .getConfiguration("codex-project-manager")
             .get<string>("userName") ||
-          "Unknown",
+          "", // previously "Unknown"
       },
       defaultLocale: "en",
       dateCreated: new Date().toDateString(),
@@ -337,3 +339,76 @@ export const projectFileExists = async () => {
   );
   return fileExists;
 };
+
+export async function parseBibleFile(bibleFile: string | undefined) {
+  console.log("Starting to parse the Bible file.");
+  if (!bibleFile) {
+    console.error("No Bible file provided.");
+    return;
+  }
+  console.log(`Bible file provided: ${bibleFile}`);
+
+  bibleFile = bibleFile.replace(/\.txt$/, '.bible');
+
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (!workspaceFolders) {
+    console.error("No workspace folders found.");
+    return;
+  }
+
+  const bibleFilePath = vscode.Uri.joinPath(workspaceFolders[0].uri, ".project/targetTextBibles", path.basename(bibleFile));
+  console.log(`Constructed file path: ${bibleFilePath}`);
+  let bibleData;
+  try {
+    console.log(`Attempting to read the Bible file from path: ${bibleFilePath}`);
+    bibleData = await vscode.workspace.fs.readFile(bibleFilePath);
+    console.log("Bible file read successfully.");
+  } catch (error) {
+    console.error("Failed to read the Bible file:", error);
+    return;
+  }
+  const bibleText = new TextDecoder("utf-8").decode(bibleData);
+  console.log("Bible text decoded successfully.");
+  const lines = bibleText.split(/\r?\n/);
+  console.log(`Total lines found in the Bible text: ${lines.length}`);
+  const books: { [key: string]: string[] } = {};
+
+  lines.forEach(line => {
+    const bookCode = line.substring(0, 3);
+    if (!books[bookCode]) {
+      books[bookCode] = [];
+      console.log(`New book found and added: ${bookCode}`);
+    }
+    books[bookCode].push(line);
+  });
+
+  console.log(`Total books parsed: ${Object.keys(books).length}`);
+
+  for (const [bookCode, content] of Object.entries(books)) {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders) {
+      console.error("No workspace folders found.");
+      return;
+    }
+    console.log(`Using workspace folder: ${workspaceFolders[0].uri.fsPath}`);
+
+    const targetPath = vscode.Uri.joinPath(
+      workspaceFolders[0].uri,
+      `.project/targetTextBibles/books/${bookCode}.txt`
+    );
+    console.log(`Target path for writing: ${targetPath}`);
+    const fileContent = content.join("\n");
+    try {
+      console.log(`Writing to file for book ${bookCode}`);
+      await vscode.workspace.fs.writeFile(targetPath, new TextEncoder().encode(fileContent));
+      console.log(`File written for book ${bookCode} at ${targetPath.fsPath}`);
+    } catch (error) {
+      console.error(`Failed to write file for book ${bookCode}:`, error);
+    }
+  }
+  createProjectNotebooksFromTxt({
+    shouldOverWrite: true,
+    folderWithTxtToConvert: [vscode.Uri.joinPath(workspaceFolders[0].uri, ".project/targetTextBibles/books")]
+
+  });
+}

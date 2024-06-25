@@ -262,7 +262,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.3",
     "@types/node": "18.x",
-    "@types/vscode": "^1.70.0",
+    "@types/vscode": "^1.90.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "@vscode/test-electron": "^2.3.6",
@@ -275,8 +275,8 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@vscode/codicons": "^0.0.35",
     "codex-types": "^0.0.2",
-    "usfm-grammar": "^2.3.1",
-    "@vscode/codicons": "^0.0.35"
+    "usfm-grammar": "^2.3.1"
   }
 }

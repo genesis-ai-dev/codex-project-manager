@@ -191,6 +191,26 @@ function App() {
             buttonDescriptionText="Download Source Text Bibles"
             buttonIcon="codicon-arrow-down"
           />
+          <AccountButton
+            iconClass="codicon-cloud-download"
+            onClick={() =>
+              vscode.postMessage({
+                command: "downloadTargetTextBibles",
+              })
+            }
+            buttonDescriptionText="Download Target Text Bibles"
+            buttonIcon="codicon-arrow-down"
+          />
+          <AccountButton
+            iconClass="codicon-terminal"
+            onClick={() =>
+              vscode.postMessage({
+                command: "openAISettings",
+              })
+            }
+            buttonDescriptionText="Open AI Chat and Completion Settings"
+            buttonIcon="codicon-settings"
+          />
         </div>
 
         <AccountButton

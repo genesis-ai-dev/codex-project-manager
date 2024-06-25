@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:ProjectManagerView": "APP_NAME=ProjectManagerView vite build",
+    "build:ProjectManagerView": "cross-env APP_NAME=ProjectManagerView vite build",
     "build:all": "npm run build:ProjectManagerView",
     "watch": "nodemon --watch src --ext ts,tsx --exec npm run build:all",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

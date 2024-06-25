@@ -34,25 +34,38 @@ const PATHS_TO_POPULATE = [
   { filePath: "file-comments.json", defaultContent: "[]" }, // We can't use the VS Code comments api for notebooks (.codex files) and other non standard files, so a second files avoids overwriting conflicts
   { filePath: "chat-threads.json", defaultContent: "[]" }, // This is where chat thread conversations are saved
 ];
-export async function downloadBible() {
+
+
+export async function downloadBible(languageType: string): Promise<string | undefined> {
+  languageType = languageType.toLowerCase();
+  console.log("languageType", languageType);
+  if (languageType !== "source" && languageType !== "target") {
+    vscode.window.showErrorMessage("Invalid language type specified. Please use 'source' or 'target'.");
+    return undefined;
+  }
+
   const projectMetadata = await getProjectMetadata();
-  const sourceLanguageCode = projectMetadata?.languages?.find(
-    (language) => language.projectStatus === LanguageProjectStatus.SOURCE
+  const languageCode = projectMetadata?.languages?.find(
+    (language) => language.projectStatus === (languageType === "source" ? LanguageProjectStatus.SOURCE : LanguageProjectStatus.TARGET)
   )?.tag;
-  let ebibleCorpusMetadata: EbibleCorpusMetadata[] =
-    getEBCorpusMetadataByLanguageCode(sourceLanguageCode || "");
+
+  if (!languageCode) {
+    vscode.window.showErrorMessage(`No ${languageType} language specified in project metadata.`);
+    return;
+  }
+
+  let ebibleCorpusMetadata: EbibleCorpusMetadata[] = getEBCorpusMetadataByLanguageCode(languageCode);
   if (ebibleCorpusMetadata.length === 0) {
     vscode.window.showInformationMessage(
-      `No source text bibles found for ${
-        sourceLanguageCode || "(no source language specified in metadata.json)"
-      } in the eBible corpus.`
+      `No text bibles found for ${languageCode} in the eBible corpus.`
     );
-    ebibleCorpusMetadata = getEBCorpusMetadataByLanguageCode(""); // Get all bibles if no source language is specified
+    ebibleCorpusMetadata = getEBCorpusMetadataByLanguageCode(""); // Get all bibles if no language is specified
   }
+
   const selectedCorpus = await vscode.window.showQuickPick(
     ebibleCorpusMetadata.map((corpus) => corpus.file),
     {
-      placeHolder: "Select a source text bible to download",
+      placeHolder: `Select a ${languageType.toLowerCase()} text bible to download`,
     }
   );
 
@@ -63,74 +76,77 @@ export async function downloadBible() {
     if (selectedCorpusMetadata) {
       const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
       if (workspaceRoot) {
-        const vrefPath = await ensureVrefList(workspaceRoot);
-
-        const sourceTextBiblePath = path.join(
-          workspaceRoot,
-          ".project",
-          "sourceTextBibles",
-          selectedCorpusMetadata.file
-        );
-        const sourceTextBiblePathUri = vscode.Uri.file(sourceTextBiblePath);
-        try {
-          console.log("Checking if source text bible exists");
-          await vscode.workspace.fs.stat(sourceTextBiblePathUri);
-          vscode.window.showInformationMessage(
-            `Source text bible ${selectedCorpusMetadata.file} already exists.`
-          );
-        } catch {
-          await downloadEBibleText(selectedCorpusMetadata, workspaceRoot);
-          vscode.window.showInformationMessage(
-            `Source text bible for ${selectedCorpusMetadata.lang} downloaded successfully.`
-          );
-        }
-
-        // Read the vref.txt file and the newly downloaded source text bible file
-        const vrefFilePath = vscode.Uri.file(vrefPath);
-        const vrefFileData = await vscode.workspace.fs.readFile(vrefFilePath);
-        const vrefLines = new TextDecoder("utf-8")
-          .decode(vrefFileData)
-          .split(/\r?\n/);
-
-        const sourceTextBibleData = await vscode.workspace.fs.readFile(
-          sourceTextBiblePathUri
-        );
-        const bibleLines = new TextDecoder("utf-8")
-          .decode(sourceTextBibleData)
-          .split(/\r?\n/);
-
-        // Zip the lines together
-        const zippedLines = vrefLines
-          .map((vrefLine, index) => `${vrefLine} ${bibleLines[index] || ""}`)
-          .filter((line) => line.trim() !== "");
-
-        // Write the zipped lines to a new .bible file
-        let fileNameWithoutExtension;
-        if (selectedCorpusMetadata.file.includes(".")) {
-          fileNameWithoutExtension = selectedCorpusMetadata.file.split(".")[0];
-        } else {
-          fileNameWithoutExtension = selectedCorpusMetadata.file;
-        }
-
-        const bibleFilePath = path.join(
-          workspaceRoot,
-          ".project",
-          "sourceTextBibles",
-          `${fileNameWithoutExtension}.bible`
-        );
-        const bibleFileUri = vscode.Uri.file(bibleFilePath);
-        await vscode.workspace.fs.writeFile(
-          bibleFileUri,
-          new TextEncoder().encode(zippedLines.join("\n"))
-        );
-
-        vscode.window.showInformationMessage(
-          `.bible file created successfully at ${bibleFilePath}`
-        );
+        await handleBibleDownload(selectedCorpusMetadata, workspaceRoot, languageType);
+        return selectedCorpusMetadata.file;
       }
     }
   }
+  return undefined;
   //   indexVerseRefsInSourceText();
+}
+
+async function handleBibleDownload(corpusMetadata: EbibleCorpusMetadata, workspaceRoot: string, languageType: string) {
+  const vrefPath = await ensureVrefList(workspaceRoot);
+
+  const bibleTextPath = path.join(
+    workspaceRoot,
+    ".project",
+    languageType === "source" ? "sourceTextBibles" : "targetTextBibles",
+    corpusMetadata.file
+  );
+  const bibleTextPathUri = vscode.Uri.file(bibleTextPath);
+  try {
+    console.log("Checking if bible text exists");
+    await vscode.workspace.fs.stat(bibleTextPathUri);
+    vscode.window.showInformationMessage(
+      `Bible text ${corpusMetadata.file} already exists.`
+    );
+  } catch {
+    await downloadEBibleText(corpusMetadata, workspaceRoot, languageType);
+    vscode.window.showInformationMessage(
+      `Bible text for ${corpusMetadata.lang} downloaded successfully.`
+    );
+  }
+
+  // Read the vref.txt file and the newly downloaded bible text file
+  const vrefFilePath = vscode.Uri.file(vrefPath);
+  const vrefFileData = await vscode.workspace.fs.readFile(vrefFilePath);
+  const vrefLines = new TextDecoder("utf-8")
+    .decode(vrefFileData)
+    .split(/\r?\n/);
+
+  const bibleTextData = await vscode.workspace.fs.readFile(
+    bibleTextPathUri
+  );
+  const bibleLines = new TextDecoder("utf-8")
+    .decode(bibleTextData)
+    .split(/\r?\n/);
+
+  // Zip the lines together
+  const zippedLines = vrefLines
+    .map((vrefLine, index) => `${vrefLine} ${bibleLines[index] || ""}`)
+    .filter((line) => line.trim() !== "");
+
+  // Write the zipped lines to a new .bible file
+  let fileNameWithoutExtension = corpusMetadata.file.includes(".")
+    ? corpusMetadata.file.split(".")[0]
+    : corpusMetadata.file;
+
+  const bibleFilePath = path.join(
+    workspaceRoot,
+    ".project",
+    languageType === "source" ? "sourceTextBibles" : "targetTextBibles",
+    `${fileNameWithoutExtension}.bible`
+  );
+  const bibleFileUri = vscode.Uri.file(bibleFilePath);
+  await vscode.workspace.fs.writeFile(
+    bibleFileUri,
+    new TextEncoder().encode(zippedLines.join("\n"))
+  );
+
+  vscode.window.showInformationMessage(
+    `.bible file created successfully at ${bibleFilePath}`
+  );
 }
 
 export async function setTargetFont() {
@@ -273,95 +289,133 @@ export async function initializeProject(shouldImportUSFM: boolean) {
     ? vscode.workspace.workspaceFolders[0]
     : undefined;
   if (!workspaceFolder) {
-    console.error(
+    vscode.window.showErrorMessage(
       "No workspace folder found. Please open a folder to store your project in."
     );
     return;
   }
 
-  vscode.window.showInformationMessage("Initializing new project...");
-  try {
-    let projectScope;
-    const projectFilePath = vscode.Uri.joinPath(
-      workspaceFolder.uri,
-      "metadata.json"
-    );
-    const fileData = await vscode.workspace.fs.readFile(projectFilePath);
-    const metadata = JSON.parse(fileData.toString());
-    projectScope = metadata?.type?.flavorType?.currentScope;
-    if (!projectScope) {
-      vscode.window.showErrorMessage(
-        "Failed to initialize new project: project scope not found."
-      );
-      return;
-    }
-    const books = Object.keys(projectScope);
+  vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: "Initializing new project...",
+      cancellable: false,
+    },
+    async (progress) => {
+      progress.report({ increment: 0, message: "Starting initialization..." });
 
-    const codexFiles = await vscode.workspace.findFiles("**/*.codex");
-    let overwriteSelection = ConfirmationOptions.NotNeeded;
-
-    if (codexFiles.length > 0) {
-      const userChoice = await vscode.window.showWarningMessage(
-        "Do you want to overwrite any existing .codex project files?",
-        { modal: true }, // This option ensures the dialog stays open until an explicit choice is made.
-        ConfirmationOptions.Yes,
-        ConfirmationOptions.No
-      );
-      overwriteSelection =
-        userChoice === ConfirmationOptions.Yes
-          ? ConfirmationOptions.Yes
-          : ConfirmationOptions.No;
-    }
-
-    switch (overwriteSelection) {
-      case ConfirmationOptions.NotNeeded:
-        vscode.window.showInformationMessage("Creating Codex Project.");
-        break;
-      case ConfirmationOptions.Yes:
-        vscode.window.showInformationMessage(
-          "Creating Codex Project with overwrite."
+      try {
+        let projectScope;
+        const projectFilePath = vscode.Uri.joinPath(
+          workspaceFolder.uri,
+          "metadata.json"
         );
-        break;
-      default:
-        vscode.window.showInformationMessage(
-          "Creating Codex Project without overwrite."
+        const fileData = await vscode.workspace.fs.readFile(projectFilePath);
+        const metadata = JSON.parse(fileData.toString());
+        projectScope = metadata?.type?.flavorType?.currentScope;
+        if (!projectScope) {
+          vscode.window.showErrorMessage(
+            "Failed to initialize new project: project scope not found."
+          );
+          return;
+        }
+        const books = Object.keys(projectScope);
+
+        const codexFiles = await vscode.workspace.findFiles("**/*.codex");
+        let overwriteSelection = ConfirmationOptions.NotNeeded;
+
+        if (codexFiles.length > 0) {
+          const userChoice = await vscode.window.showWarningMessage(
+            "Do you want to overwrite any existing .codex project files?",
+            { modal: true },
+            ConfirmationOptions.Yes,
+            ConfirmationOptions.No
+          );
+          overwriteSelection =
+            userChoice === ConfirmationOptions.Yes
+              ? ConfirmationOptions.Yes
+              : ConfirmationOptions.No;
+        }
+
+        switch (overwriteSelection) {
+          case ConfirmationOptions.NotNeeded:
+            vscode.window.showInformationMessage("Creating Codex Project.");
+            break;
+          case ConfirmationOptions.Yes:
+            vscode.window.showInformationMessage(
+              "Creating Codex Project with overwrite."
+            );
+            break;
+          default:
+            vscode.window.showInformationMessage(
+              "Creating Codex Project without overwrite."
+            );
+            break;
+        }
+
+        progress.report({ increment: 50, message: "Setting up GitHub repository..." });
+        try {
+          const gitExtension = vscode.extensions.getExtension('vscode.git');
+          if (gitExtension) {
+            await gitExtension.activate();
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (workspaceFolders && workspaceFolders.length > 0) {
+              const rootPath = workspaceFolders[0].uri.fsPath;
+              await vscode.commands.executeCommand('git.init', rootPath);
+              vscode.window.showInformationMessage("GitHub repository initialized successfully");
+            } else {
+              vscode.window.showErrorMessage("No workspace folder found to initialize the GitHub repository.");
+            }
+          } else {
+            vscode.window.showErrorMessage("Git extension is not available.");
+          }
+        } catch (error) {
+          vscode.window.showErrorMessage(
+            `Failed to initialize new GitHub repository: ${error}`
+          );
+        }
+
+        const shouldOverWrite =
+          overwriteSelection === ConfirmationOptions.Yes ||
+          overwriteSelection === ConfirmationOptions.NotNeeded;
+        let foldersWithUsfmToConvert: vscode.Uri[] | undefined;
+        if (shouldImportUSFM) {
+          const folderUri = await vscode.window.showOpenDialog({
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false,
+            openLabel: "Choose USFM project folder",
+          });
+          foldersWithUsfmToConvert = folderUri;
+        }
+
+        progress.report({ increment: 80, message: "Creating project notebooks and comment files..." });
+        await createProjectNotebooks({
+          shouldOverWrite,
+          books,
+          foldersWithUsfmToConvert,
+        });
+        await createProjectCommentFiles({
+          shouldOverWrite,
+        });
+
+        progress.report({ increment: 100, message: "Project initialization complete." });
+        vscode.window.showInformationMessage("Project initialized successfully.");
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `Failed to initialize new project: ${error}`
         );
-        break;
+      }
+
+      try {
+        await vscode.commands.executeCommand(
+          "scripture-explorer-activity-bar.refreshEntry"
+        );
+      } catch (error) {
+        console.log("error called commands of outside extension", error);
+      }
     }
-    const shouldOverWrite =
-      overwriteSelection === ConfirmationOptions.Yes ||
-      overwriteSelection === ConfirmationOptions.NotNeeded;
-    let foldersWithUsfmToConvert: vscode.Uri[] | undefined;
-    if (shouldImportUSFM) {
-      const folderUri = await vscode.window.showOpenDialog({
-        canSelectFolders: true,
-        canSelectFiles: false,
-        canSelectMany: false,
-        openLabel: "Choose USFM project folder",
-      });
-      console.log({ folderUri });
-      foldersWithUsfmToConvert = folderUri;
-    }
-    await createProjectNotebooks({
-      shouldOverWrite,
-      books,
-      foldersWithUsfmToConvert,
-    });
-    await createProjectCommentFiles({
-      shouldOverWrite,
-    });
-  } catch (error) {
-    vscode.window.showErrorMessage(
-      `Failed to initialize new project: ${error}`
-    );
-  }
-  try {
-    await vscode.commands.executeCommand(
-      "scripture-explorer-activity-bar.refreshEntry"
-    );
-  } catch (error) {
-    console.log("error called commands of outside extension", error);
-  }
+  );
 }
 
 export async function checkForMissingFiles() {
