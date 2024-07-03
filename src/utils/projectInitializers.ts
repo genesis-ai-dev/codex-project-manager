@@ -33,6 +33,8 @@ const PATHS_TO_POPULATE = [
   { filePath: "comments.json", defaultContent: "" }, // This is where we store the VS Code comments api comments, such as on .bible files
   { filePath: "file-comments.json", defaultContent: "[]" }, // We can't use the VS Code comments api for notebooks (.codex files) and other non standard files, so a second files avoids overwriting conflicts
   { filePath: "chat-threads.json", defaultContent: "[]" }, // This is where chat thread conversations are saved
+  { filePath: ".project/sourceTextBibles" }, // This is where we store the source text bibles
+  { filePath: ".project/targetTextBibles" }, // This is where we store the target text bibles
 ];
 
 
