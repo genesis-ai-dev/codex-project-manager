@@ -14,7 +14,7 @@
     "url": "https://github.com/genesis-ai-dev/codex-project-manager"
   },
   "engines": {
-    "vscode": "^1.70.0"
+    "vscode": "^1.85.0"
   },
   "categories": [
     "Other"
