@@ -38,13 +38,7 @@ const PATHS_TO_POPULATE = [
 ];
 
 
-export async function downloadBible(languageType: string): Promise<string | undefined> {
-  languageType = languageType.toLowerCase();
-  console.log("languageType", languageType);
-  if (languageType !== "source" && languageType !== "target") {
-    vscode.window.showErrorMessage("Invalid language type specified. Please use 'source' or 'target'.");
-    return undefined;
-  }
+export async function downloadBible(languageType: "source" | "target"): Promise<string | undefined> {
 
   const projectMetadata = await getProjectMetadata();
   const languageCode = projectMetadata?.languages?.find(
@@ -67,7 +61,7 @@ export async function downloadBible(languageType: string): Promise<string | unde
   const selectedCorpus = await vscode.window.showQuickPick(
     ebibleCorpusMetadata.map((corpus) => corpus.file),
     {
-      placeHolder: `Select a ${languageType.toLowerCase()} text bible to download`,
+      placeHolder: `Select a ${languageType} text bible to download`,
     }
   );
 

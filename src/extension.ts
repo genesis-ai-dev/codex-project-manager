@@ -200,7 +200,6 @@ export async function activate(context: vscode.ExtensionContext) {
     "codex-project-manager.setEditorFontToTargetLanguage",
     await setTargetFont
   );
-
   // Register command to prompt user for target language
   context.subscriptions.push(
     vscode.commands.registerCommand(
