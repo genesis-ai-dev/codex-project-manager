@@ -63,6 +63,16 @@
         "command": "codex-project-manager.downloadTargetBible",
         "title": "Download Target Bible",
         "category": "Codex Project Management"
+      },
+      {
+        "command": "codex-project-manager.editAbbreviation",
+        "title": "Edit Abbreviation",
+        "category": "Codex Project Management"
+      },
+      {
+        "command": "codex-project-manager.selectCategory",
+        "title": "Select Category",
+        "category": "Codex Project Management"
       }
     ],
     "views": {
@@ -151,6 +161,32 @@
             },
             "completionEvents": [
               "onCommand:codex-project-manager.promptUserForTargetLanguage"
+            ],
+            "when": "workbenchState !== empty"
+          },
+          {
+            "id": "setAbbreviation",
+            "title": "Set Project Abbreviation",
+            "description": "Let's set an abbreviation for your Codex project.\n[Set Abbreviation](command:codex-project-manager.editAbbreviation)",
+            "media": {
+              "image": "./src/media/set-abbreviation.png",
+              "altText": "Set Project Abbreviation"
+            },
+            "completionEvents": [
+              "onCommand:codex-project-manager.editAbbreviation"
+            ],
+            "when": "workbenchState !== empty"
+          },
+          {
+            "id": "selectCategory",
+            "title": "Select Project Category",
+            "description": "Now, let's choose a category for your Codex project.\n[Select Category](command:codex-project-manager.selectCategory)",
+            "media": {
+              "image": "./src/media/select-category.png",
+              "altText": "Select Project Category"
+            },
+            "completionEvents": [
+              "onCommand:codex-project-manager.selectCategory"
             ],
             "when": "workbenchState !== empty"
           },

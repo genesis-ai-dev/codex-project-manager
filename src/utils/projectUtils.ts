@@ -27,7 +27,7 @@ export async function promptForTargetLanguage(): Promise<
 
   const quickPickItems = [
     ...languages.map(getLanguageDisplayName),
-    "$(add) Custom Language"
+    "$(add) Custom Language",
   ];
 
   const targetLanguagePick = await vscode.window.showQuickPick(quickPickItems, {
@@ -54,7 +54,7 @@ export async function promptForTargetLanguage(): Promise<
 
     targetLanguage = {
       name: {
-        "en": customLanguage,
+        en: customLanguage,
       },
       tag: "custom",
       refName: customLanguage,
@@ -85,14 +85,14 @@ export async function promptForSourceLanguage(): Promise<
   ProjectDetails | undefined
 > {
   const languages = LanguageCodes;
-  
+
   function getLanguageDisplayName(lang: LanguageMetadata): string {
     return `${lang.refName} (${lang.tag})`;
   }
 
   const quickPickItems = [
     ...languages.map(getLanguageDisplayName),
-    "$(add) Custom Language"
+    "$(add) Custom Language",
   ];
 
   const sourceLanguagePick = await vscode.window.showQuickPick(quickPickItems, {
@@ -119,7 +119,7 @@ export async function promptForSourceLanguage(): Promise<
 
     sourceLanguage = {
       name: {
-        "en": customLanguage,
+        en: customLanguage,
       },
       tag: "custom",
       refName: customLanguage,
@@ -162,13 +162,13 @@ export function generateProjectScope(
 
   skipNonCanonical
     ? books
-      .filter((book) => !nonCanonicalBookRefs.includes(book))
-      .forEach((book) => {
-        projectScope[book] = [];
-      })
+        .filter((book) => !nonCanonicalBookRefs.includes(book))
+        .forEach((book) => {
+          projectScope[book] = [];
+        })
     : books.forEach((book) => {
-      projectScope[book] = [];
-    });
+        projectScope[book] = [];
+      });
   return projectScope;
 }
 
@@ -311,6 +311,7 @@ export async function updateMetadataFile() {
   project.meta.generator.userName = projectSettings.get("userName", "");
   project.languages[0] = projectSettings.get("sourceLanguage", "");
   project.languages[1] = projectSettings.get("targetLanguage", "");
+  project.meta.abbreviation = projectSettings.get("abbreviation", "");
   // Update other fields as needed
   console.log("Project settings loaded:", { projectSettings, project });
   const updatedProjectFileData = Buffer.from(
@@ -341,9 +342,12 @@ export const projectFileExists = async () => {
   return fileExists;
 };
 
-export async function parseAndReplaceBibleFile(bibleFile: string | undefined, replace: boolean) {
+export async function parseAndReplaceBibleFile(
+  bibleFile: string | undefined,
+  replace: boolean
+) {
   console.log("Starting to parse the Bible file.");
-  
+
   // Check if the bibleFile is provided
   if (!bibleFile) {
     console.error("No Bible file provided.");
@@ -352,7 +356,7 @@ export async function parseAndReplaceBibleFile(bibleFile: string | undefined, re
   console.log(`Bible file provided: ${bibleFile}`);
 
   // Replace the file extension from .txt to .bible
-  bibleFile = bibleFile.replace(/\.txt$/, '.bible');
+  bibleFile = bibleFile.replace(/\.txt$/, ".bible");
 
   // Get the workspace folders
   const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -362,12 +366,18 @@ export async function parseAndReplaceBibleFile(bibleFile: string | undefined, re
   }
 
   // Construct the file path for the Bible file
-  const bibleFilePath = vscode.Uri.joinPath(workspaceFolders[0].uri, ".project/targetTextBibles", path.basename(bibleFile));
+  const bibleFilePath = vscode.Uri.joinPath(
+    workspaceFolders[0].uri,
+    ".project/targetTextBibles",
+    path.basename(bibleFile)
+  );
   console.log(`Constructed file path: ${bibleFilePath}`);
-  
+
   let bibleData;
   try {
-    console.log(`Attempting to read the Bible file from path: ${bibleFilePath}`);
+    console.log(
+      `Attempting to read the Bible file from path: ${bibleFilePath}`
+    );
     // Read the Bible file
     bibleData = await vscode.workspace.fs.readFile(bibleFilePath);
     console.log("Bible file read successfully.");
@@ -379,16 +389,16 @@ export async function parseAndReplaceBibleFile(bibleFile: string | undefined, re
   // Decode the Bible file content
   const bibleText = new TextDecoder("utf-8").decode(bibleData);
   console.log("Bible text decoded successfully.");
-  
+
   // Split the Bible text into lines
   const lines = bibleText.split(/\r?\n/);
   console.log(`Total lines found in the Bible text: ${lines.length}`);
-  
+
   // Initialize an object to store the books
   const books: { [key: string]: string[] } = {};
 
   // Iterate through each line and categorize them by book code
-  lines.forEach(line => {
+  lines.forEach((line) => {
     const bookCode = line.substring(0, 3);
     if (!books[bookCode]) {
       books[bookCode] = [];
@@ -403,7 +413,7 @@ export async function parseAndReplaceBibleFile(bibleFile: string | undefined, re
   const targetFolderPath = vscode.Uri.joinPath(
     workspaceFolders[0].uri,
     `.project/targetTextBibles/`,
-    path.basename(bibleFile).replace(/\.bible$/, '')
+    path.basename(bibleFile).replace(/\.bible$/, "")
   );
 
   // Iterate through each book and write its content to a file
@@ -421,12 +431,15 @@ export async function parseAndReplaceBibleFile(bibleFile: string | undefined, re
       `/${bookCode}.txt`
     );
     console.log(`Target path for writing: ${targetPath}`);
-    
+
     const fileContent = content.join("\n");
     try {
       console.log(`Writing to file for book ${bookCode}`);
       // Write the book content to the file
-      await vscode.workspace.fs.writeFile(targetPath, new TextEncoder().encode(fileContent));
+      await vscode.workspace.fs.writeFile(
+        targetPath,
+        new TextEncoder().encode(fileContent)
+      );
       console.log(`File written for book ${bookCode} at ${targetPath.fsPath}`);
     } catch (error) {
       console.error(`Failed to write file for book ${bookCode}:`, error);
@@ -434,12 +447,10 @@ export async function parseAndReplaceBibleFile(bibleFile: string | undefined, re
   }
 
   // Create project notebooks from the parsed text files
-  if(replace){
+  if (replace) {
     createProjectNotebooksFromTxt({
       shouldOverWrite: true,
-      folderWithTxtToConvert: [
-       targetFolderPath
-     ]
+      folderWithTxtToConvert: [targetFolderPath],
     });
   }
 
@@ -453,11 +464,17 @@ async function deleteOriginalFiles(bibleFile: string) {
     return;
   }
   const workspaceFolderUri = vscode.workspace.workspaceFolders[0].uri;
-  const bibleFilePath = vscode.Uri.joinPath(workspaceFolderUri, ".project/targetTextBibles", path.basename(bibleFile));
+  const bibleFilePath = vscode.Uri.joinPath(
+    workspaceFolderUri,
+    ".project/targetTextBibles",
+    path.basename(bibleFile)
+  );
   try {
     console.log(`Deleting the original Bible file: ${bibleFilePath.fsPath}`);
     await vscode.workspace.fs.delete(bibleFilePath);
-    const originalTxtPath = bibleFilePath.with({ path: bibleFilePath.path.replace(/\.bible$/, '.txt') });
+    const originalTxtPath = bibleFilePath.with({
+      path: bibleFilePath.path.replace(/\.bible$/, ".txt"),
+    });
     console.log(`Deleting the original TXT file: ${originalTxtPath.fsPath}`);
     await vscode.workspace.fs.delete(originalTxtPath);
     console.log("Original files deleted successfully.");
@@ -477,25 +494,51 @@ export async function getProjectOverview(): Promise<ProjectOverview> {
   const metadata = JSON.parse(metadataContent.toString());
 
   // Get a list of URIs for the downloaded source and target Bibles in the project, if any
-  const sourceTextBiblesPath = vscode.Uri.joinPath(workspaceFolder.uri, '.project/sourceTextBibles');
-  const targetTextBiblesPath = vscode.Uri.joinPath(workspaceFolder.uri, '.project/targetTextBibles');
+  const sourceTextBiblesPath = vscode.Uri.joinPath(
+    workspaceFolder.uri,
+    ".project/sourceTextBibles"
+  );
+  const targetTextBiblesPath = vscode.Uri.joinPath(
+    workspaceFolder.uri,
+    ".project/targetTextBibles"
+  );
 
-  const sourceTextBibles = await Promise.resolve(vscode.workspace.fs.readDirectory(sourceTextBiblesPath))
-    .then(entries => entries.filter(([name]) => name.endsWith('.bible')).map(([name]) => vscode.Uri.joinPath(sourceTextBiblesPath, name)))
+  const sourceTextBibles = await Promise.resolve(
+    vscode.workspace.fs.readDirectory(sourceTextBiblesPath)
+  )
+    .then((entries) =>
+      entries
+        .filter(([name]) => name.endsWith(".bible"))
+        .map(([name]) => vscode.Uri.joinPath(sourceTextBiblesPath, name))
+    )
     .catch(() => []);
 
-  const targetTextBibles = await Promise.resolve(vscode.workspace.fs.readDirectory(targetTextBiblesPath))
-    .then(entries => entries.filter(([name]) => name.endsWith('.bible')).map(([name]) => vscode.Uri.joinPath(targetTextBiblesPath, name)))
+  const targetTextBibles = await Promise.resolve(
+    vscode.workspace.fs.readDirectory(targetTextBiblesPath)
+  )
+    .then((entries) =>
+      entries
+        .filter(([name]) => name.endsWith(".bible"))
+        .map(([name]) => vscode.Uri.joinPath(targetTextBiblesPath, name))
+    )
     .catch(() => []);
+
+  const config = vscode.workspace.getConfiguration("codex-project-manager");
 
   return {
     projectName: metadata.projectName,
-    abbreviation: metadata.abbreviation,
-    sourceLanguage: metadata.languages.find((lang: LanguageMetadata) => lang.projectStatus === LanguageProjectStatus.SOURCE),
-    targetLanguage: metadata.languages.find((lang: LanguageMetadata) => lang.projectStatus === LanguageProjectStatus.TARGET),
+    abbreviation: metadata.meta.abbreviation,
+    sourceLanguage: metadata.languages.find(
+      (lang: LanguageMetadata) =>
+        lang.projectStatus === LanguageProjectStatus.SOURCE
+    ),
+    targetLanguage: metadata.languages.find(
+      (lang: LanguageMetadata) =>
+        lang.projectStatus === LanguageProjectStatus.TARGET
+    ),
     category: metadata.meta.category,
     userName: metadata.meta.generator.userName,
     sourceTextBibles,
-    targetTextBibles
+    targetTextBibles,
   };
 }

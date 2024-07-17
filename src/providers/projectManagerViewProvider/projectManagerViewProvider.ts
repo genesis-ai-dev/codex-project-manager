@@ -106,7 +106,8 @@ const loadWebviewHtml = (
       Use a content security policy to only allow loading images from https or from our extension directory,
       and only allow scripts that have a specific nonce.
     -->
-    <meta http-equiv="Content-Security-Policy" content="img-src https: data:; style-src 'unsafe-inline' ${webviewView.webview.cspSource
+    <meta http-equiv="Content-Security-Policy" content="img-src https: data:; style-src 'unsafe-inline' ${
+      webviewView.webview.cspSource
     }; script-src 'nonce-${nonce}';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="${styleResetUri}" rel="stylesheet">
@@ -141,12 +142,14 @@ export class CustomWebviewProvider implements vscode.WebviewViewProvider {
 
     // Wait for the webview to signal it's ready
     await new Promise<void>((resolve) => {
-      const readyListener = webviewView.webview.onDidReceiveMessage((message) => {
-        if (message.command === 'webviewReady') {
-          resolve();
-          readyListener.dispose();
+      const readyListener = webviewView.webview.onDidReceiveMessage(
+        (message) => {
+          if (message.command === "webviewReady") {
+            resolve();
+            readyListener.dispose();
+          }
         }
-      });
+      );
     });
 
     // Initial project overview fetch
@@ -171,7 +174,15 @@ export class CustomWebviewProvider implements vscode.WebviewViewProvider {
           );
           break;
         case "changeUserName":
-          vscode.commands.executeCommand("codex-project-manager.userName", true);
+          vscode.commands.executeCommand(
+            "codex-project-manager.userName",
+            true
+          );
+          break;
+        case "editAbbreviation":
+          vscode.commands.executeCommand(
+            "codex-project-manager.editAbbreviation"
+          );
           break;
         case "changeSourceLanguage":
           console.log("changeSourceLanguage called");
@@ -194,6 +205,11 @@ export class CustomWebviewProvider implements vscode.WebviewViewProvider {
             "codex-project-manager.openAISettings"
           );
           break;
+        case "selectCategory":
+          vscode.commands.executeCommand(
+            "codex-project-manager.selectCategory"
+          );
+          break;
         case "downloadSourceTextBibles":
           vscode.commands.executeCommand(
             "codex-project-manager.downloadSourceTextBibles"
@@ -205,7 +221,9 @@ export class CustomWebviewProvider implements vscode.WebviewViewProvider {
           );
           break;
         case "openBible":
-          vscode.window.showInformationMessage(`Opening bible: ${JSON.stringify(message)}`);
+          vscode.window.showInformationMessage(
+            `Opening bible: ${JSON.stringify(message)}`
+          );
           simpleOpen(message.data.path);
           break;
         case "webviewReady":
@@ -217,7 +235,7 @@ export class CustomWebviewProvider implements vscode.WebviewViewProvider {
 
     // Set up a listener for configuration changes
     vscode.workspace.onDidChangeConfiguration(async (event) => {
-      if (event.affectsConfiguration('codex-project-manager')) {
+      if (event.affectsConfiguration("codex-project-manager")) {
         await this.updateProjectOverview();
       }
     });
@@ -234,8 +252,10 @@ export class CustomWebviewProvider implements vscode.WebviewViewProvider {
         data: newProjectOverview,
       });
       this.webviewHasInitialProjectOverviewData = true;
-    }
-    else if (JSON.stringify(newProjectOverview) !== JSON.stringify(this._projectOverview)) {
+    } else if (
+      JSON.stringify(newProjectOverview) !==
+      JSON.stringify(this._projectOverview)
+    ) {
       this._projectOverview = newProjectOverview;
       this._view?.webview.postMessage({
         command: "sendProjectOverview",
