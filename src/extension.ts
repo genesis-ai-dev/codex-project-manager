@@ -608,6 +608,42 @@ export async function activate(context: vscode.ExtensionContext) {
         context.workspaceState.update("isWalkthroughCompleted", true);
       })
     ),
+    // Register command to reinstall VSCode extensions
+    vscode.commands.registerCommand(
+      "codex-project-manager.reinstallExtensions",
+      async (extensionIds: string[]) => {
+        if (!extensionIds || extensionIds.length === 0) {
+          vscode.window.showErrorMessage("No extension IDs provided.");
+          return;
+        }
+
+        // Uninstall extensions
+        for (const id of extensionIds) {
+          await vscode.commands.executeCommand(
+            "workbench.extensions.uninstallExtension",
+            id
+          );
+        }
+
+        // Reload window
+        await vscode.commands.executeCommand("workbench.action.reloadWindow");
+
+        // Re-install extensions
+        for (const id of extensionIds) {
+          await vscode.commands.executeCommand(
+            "workbench.extensions.installExtension",
+            id
+          );
+        }
+
+        // Reload window again
+        await vscode.commands.executeCommand("workbench.action.reloadWindow");
+
+        vscode.window.showInformationMessage(
+          `Reinstalled extensions: ${extensionIds.join(", ")}`
+        );
+      }
+    ),
 
     // Register command to show project overview
     vscode.commands.registerCommand(

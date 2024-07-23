@@ -5,7 +5,7 @@
   "author": {
     "name": "BiblioNexus Foundation"
   },
-  "version": "0.0.17",
+  "version": "0.0.18",
   "publisher": "project-accelerate",
   "homepage": "https://codex-editor.gitbook.io/",
   "license": "MIT",
@@ -72,6 +72,11 @@
       {
         "command": "codex-project-manager.selectCategory",
         "title": "Select Category",
+        "category": "Codex Project Management"
+      },
+      {
+        "command": "codex-project-manager.reinstallExtensions",
+        "title": "Reinstall Extensions",
         "category": "Codex Project Management"
       }
     ],
