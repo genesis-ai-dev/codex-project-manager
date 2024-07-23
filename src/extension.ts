@@ -619,25 +619,49 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // Uninstall extensions
         for (const id of extensionIds) {
-          await vscode.commands.executeCommand(
-            "workbench.extensions.uninstallExtension",
-            id
-          );
+          try {
+            vscode.window.showInformationMessage(
+              `Uninstalling extension: ${id}`
+            );
+            await vscode.commands.executeCommand(
+              "workbench.extensions.uninstallExtension",
+              id
+            );
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          } catch (error) {
+            vscode.window.showErrorMessage(
+              `Failed to uninstall extension: ${id}. Error: ${error}`
+            );
+            return;
+          }
         }
-
-        // Reload window
-        await vscode.commands.executeCommand("workbench.action.reloadWindow");
 
         // Re-install extensions
         for (const id of extensionIds) {
-          await vscode.commands.executeCommand(
-            "workbench.extensions.installExtension",
-            id
-          );
+          try {
+            vscode.window.showInformationMessage(`Installing extension: ${id}`);
+            await vscode.commands.executeCommand(
+              "workbench.extensions.installExtension",
+              id
+            );
+          } catch (error) {
+            vscode.window.showErrorMessage(
+              `Failed to install extension: ${id}. Error: ${error}`
+            );
+            return;
+          }
         }
-
-        // Reload window again
-        await vscode.commands.executeCommand("workbench.action.reloadWindow");
+        // Reload window
+        try {
+          vscode.window.showInformationMessage(`Reloading window...`);
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          await vscode.commands.executeCommand("workbench.action.reloadWindow");
+        } catch (error) {
+          vscode.window.showErrorMessage(
+            `Failed to reload window. Error: ${error}`
+          );
+          return;
+        }
 
         vscode.window.showInformationMessage(
           `Reinstalled extensions: ${extensionIds.join(", ")}`
