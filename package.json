@@ -294,6 +294,9 @@
       }
     }
   },
+  "extensionDependencies": [
+    "project-accelerate.codex-editor-extension"
+  ],
   "scripts": {
     "vscode:prepublish": "pnpm run package",
     "compile": "webpack",
