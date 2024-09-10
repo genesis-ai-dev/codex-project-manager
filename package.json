@@ -5,7 +5,7 @@
   "author": {
     "name": "BiblioNexus Foundation"
   },
-  "version": "0.0.19",
+  "version": "0.0.20",
   "publisher": "project-accelerate",
   "homepage": "https://codex-editor.gitbook.io/",
   "license": "MIT",
@@ -294,6 +294,9 @@
       }
     }
   },
+  "extensionDependencies": [
+    "project-accelerate.codex-editor-extension"
+  ],
   "scripts": {
     "vscode:prepublish": "pnpm run package",
     "compile": "webpack",
