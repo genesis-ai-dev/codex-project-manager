@@ -5,6 +5,7 @@ interface ChatMessage {
   content: string;
 }
 
+/* This is the project overview that populates the project manager webview */
 interface ProjectOverview {
   projectName: string;
   abbreviation: string;
@@ -14,7 +15,112 @@ interface ProjectOverview {
   userName: string;
   sourceTextBibles?: vscode.Uri[] | never[];
   targetTextBibles?: vscode.Uri[] | never[];
+  targetFont: string;
+  
 }
+
+/* This is the project metadata that is saved in the metadata.json file */
+export type ProjectMetadata = {
+  format: string;
+  meta: {
+    version: string;
+    category: string;
+    generator: {
+      softwareName: string;
+      softwareVersion: string;
+      userName: string;
+    };
+    defaultLocale: string;
+    dateCreated: string;
+    normalization: string;
+    comments?: string[];
+  };
+  idAuthorities: {
+    [key: string]: {
+      id: string;
+      name: {
+        [lang: string]: string;
+      };
+    };
+  };
+  identification: {
+    primary: {
+      [authority: string]: {
+        [id: string]: {
+          revision: string;
+          timestamp: string;
+        };
+      };
+    };
+    name: {
+      [lang: string]: string;
+    };
+    description: {
+      [lang: string]: string;
+    };
+    abbreviation: {
+      [lang: string]: string;
+    };
+  };
+  languages: Array<{
+    tag: string;
+    name: {
+      [lang: string]: string;
+    };
+  }>;
+  type: {
+    flavorType: {
+      name: string;
+      flavor: {
+        name: string;
+        usfmVersion?: string;
+        translationType?: string;
+        audience?: string;
+        projectType?: string;
+      };
+      currentScope: {
+        [book: string]: any[];
+      };
+    };
+  };
+  confidential: boolean;
+  agencies: Array<{
+    id: string;
+    roles: string[];
+    url?: string;
+    name: {
+      [lang: string]: string;
+    };
+    abbr?: {
+      [lang: string]: string;
+    };
+  }>;
+  targetAreas?: Array<{
+    code: string;
+    name: {
+      [lang: string]: string;
+    };
+  }>;
+  ingredients?: {
+    [path: string]: {
+      checksum: {
+        md5: string;
+      };
+      mimeType: string;
+      size: number;
+      scope?: {
+        [book: string]: any[];
+      };
+    };
+  };
+  copyright?: {
+    shortStatements: Array<{
+      statement: string;
+      mimetype: string;
+      lang: string;
+    }>;
+  };
+};
 
 interface ChatMessageWithContext extends ChatMessage {
   context?: any; // FixMe: discuss what context could be. Cound it be a link to a note?
