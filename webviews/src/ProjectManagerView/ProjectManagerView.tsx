@@ -89,11 +89,16 @@ function App() {
     }
   }, [error, projectOverview, noProjectFound]);
 
-  const handleAction = (command: string, data?: any) => {
+  const handleAction = useCallback((command: string, data?: any) => {
     setIsLoading(true);
     setError(null);
     vscode.postMessage({ command, data });
-  };
+    
+    // Schedule a refresh after a short delay
+    setTimeout(() => {
+      vscode.postMessage({ command: 'requestProjectOverview' });
+    }, 1500); // Wait for 1.5 seconds before requesting an update
+  }, []);
 
   return (
     <div
