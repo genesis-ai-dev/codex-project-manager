@@ -33,15 +33,14 @@ const ROOT_PATH = getWorkSpaceFolder();
 
 
 export async function downloadBible(languageType: "source" | "target"): Promise<string | undefined> {
-
   const projectMetadata = await getProjectMetadata();
-  const languageCode = projectMetadata?.languages?.find(
+  let languageCode = projectMetadata?.languages?.find(
     (language) => language.projectStatus === (languageType === "source" ? LanguageProjectStatus.SOURCE : LanguageProjectStatus.TARGET)
   )?.tag;
 
   if (!languageCode) {
     vscode.window.showErrorMessage(`No ${languageType} language specified in project metadata.`);
-    return;
+    languageCode = "";
   }
 
   let ebibleCorpusMetadata: EbibleCorpusMetadata[] = getEBCorpusMetadataByLanguageCode(languageCode);
@@ -52,27 +51,54 @@ export async function downloadBible(languageType: "source" | "target"): Promise<
     ebibleCorpusMetadata = getEBCorpusMetadataByLanguageCode(""); // Get all bibles if no language is specified
   }
 
-  const selectedCorpus = await vscode.window.showQuickPick(
-    ebibleCorpusMetadata.map((corpus) => corpus.file),
+  // Create quick pick items with a 'See more languages' option
+  const getQuickPickItems = (ebibleCorpusMetadata: EbibleCorpusMetadata[]) => [
+    ...ebibleCorpusMetadata.map((corpus) => ({
+      label: corpus.file,
+      description: `Download ${corpus.file}`,
+      corpus: corpus, // Add the full corpus metadata to the item
+    })),
     {
-      placeHolder: `Select a ${languageType} text bible to download`,
-    }
-  );
+      label: "See more languages",
+      description: "Reload eBible metadata for all languages",
+      corpus: null, // No corpus for this option
+    },
+  ];
 
-  if (selectedCorpus) {
-    const selectedCorpusMetadata = ebibleCorpusMetadata.find(
-      (corpus) => corpus.file === selectedCorpus
-    );
-    if (selectedCorpusMetadata) {
-      const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-      if (workspaceRoot) {
-        await handleBibleDownload(selectedCorpusMetadata, workspaceRoot, languageType);
-        return selectedCorpusMetadata.file;
-      }
+  let selectedItem: vscode.QuickPickItem & { corpus: EbibleCorpusMetadata | null } | undefined;
+  let items = getQuickPickItems(ebibleCorpusMetadata);
+
+  while (true) {
+    selectedItem = await vscode.window.showQuickPick(items, {
+      placeHolder: `Select a ${languageType} text bible to download`,
+    });
+
+    if (!selectedItem) {
+      vscode.window.showErrorMessage("No text bible selected.");
+      return;
+    }
+
+    if (selectedItem.label === "See more languages") {
+      // Reload eBible metadata for all languages
+      ebibleCorpusMetadata = getEBCorpusMetadataByLanguageCode(""); // Get all bibles
+      items = getQuickPickItems(ebibleCorpusMetadata);
+      vscode.window.showInformationMessage("Reloaded eBible metadata for all languages.");
+      continue; // Continue the loop to show the updated list
+    }
+
+    // If we reach here, a bible was selected
+    break;
+  }
+
+  if (selectedItem && selectedItem.corpus) {
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+    if (workspaceRoot) {
+      await handleBibleDownload(selectedItem.corpus, workspaceRoot, languageType);
+      return selectedItem.corpus.file;
     }
   }
+
   return undefined;
-  //   indexVerseRefsInSourceText();
 }
 
 async function handleBibleDownload(corpusMetadata: EbibleCorpusMetadata, workspaceRoot: string, languageType: string) {
