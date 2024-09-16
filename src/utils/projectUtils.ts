@@ -416,6 +416,15 @@ export async function parseAndReplaceBibleFile(
     path.basename(bibleFile).replace(/\.bible$/, "")
   );
 
+  // Create the target folder if it doesn't exist
+  try {
+    await vscode.workspace.fs.createDirectory(targetFolderPath);
+    console.log(`Created target folder: ${targetFolderPath.fsPath}`);
+  } catch (error) {
+    console.error(`Failed to create target folder: ${error}`);
+    return;
+  }
+
   // Iterate through each book and write its content to a file
   for (const [bookCode, content] of Object.entries(books)) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -483,62 +492,70 @@ async function deleteOriginalFiles(bibleFile: string) {
   }
 }
 
-export async function getProjectOverview(): Promise<ProjectOverview> {
+export async function getProjectOverview(): Promise<ProjectOverview | undefined> {
   const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
   if (!workspaceFolder) {
-    throw new Error("No workspace folder found");
+    console.error("No workspace folder found");
+    return undefined;
   }
 
   const metadataUri = vscode.Uri.joinPath(workspaceFolder.uri, "metadata.json");
-  const metadataContent = await vscode.workspace.fs.readFile(metadataUri);
-  const metadata = JSON.parse(metadataContent.toString());
+  
+  try {
+    const metadataContent = await vscode.workspace.fs.readFile(metadataUri);
+    const metadata = JSON.parse(metadataContent.toString());
 
-  // Get a list of URIs for the downloaded source and target Bibles in the project, if any
-  const sourceTextBiblesPath = vscode.Uri.joinPath(
-    workspaceFolder.uri,
-    ".project/sourceTextBibles"
-  );
-  const targetTextBiblesPath = vscode.Uri.joinPath(
-    workspaceFolder.uri,
-    ".project/targetTextBibles"
-  );
+    // Get a list of URIs for the downloaded source and target Bibles in the project, if any
+    const sourceTextBiblesPath = vscode.Uri.joinPath(
+      workspaceFolder.uri,
+      ".project/sourceTextBibles"
+    );
+    const targetTextBiblesPath = vscode.Uri.joinPath(
+      workspaceFolder.uri,
+      ".project/targetTextBibles"
+    );
 
-  const sourceTextBibles = await Promise.resolve(
-    vscode.workspace.fs.readDirectory(sourceTextBiblesPath)
-  )
-    .then((entries) =>
-      entries
-        .filter(([name]) => name.endsWith(".bible"))
-        .map(([name]) => vscode.Uri.joinPath(sourceTextBiblesPath, name))
+    const sourceTextBibles = await Promise.resolve(
+      vscode.workspace.fs.readDirectory(sourceTextBiblesPath)
     )
-    .catch(() => []);
+      .then((entries) =>
+        entries
+          .filter(([name]) => name.endsWith(".bible"))
+          .map(([name]) => vscode.Uri.joinPath(sourceTextBiblesPath, name))
+      )
+      .catch(() => []);
 
-  const targetTextBibles = await Promise.resolve(
-    vscode.workspace.fs.readDirectory(targetTextBiblesPath)
-  )
-    .then((entries) =>
-      entries
-        .filter(([name]) => name.endsWith(".bible"))
-        .map(([name]) => vscode.Uri.joinPath(targetTextBiblesPath, name))
+    const targetTextBibles = await Promise.resolve(
+      vscode.workspace.fs.readDirectory(targetTextBiblesPath)
     )
-    .catch(() => []);
+      .then((entries) =>
+        entries
+          .filter(([name]) => name.endsWith(".bible"))
+          .map(([name]) => vscode.Uri.joinPath(targetTextBiblesPath, name))
+      )
+      .catch(() => []);
 
-  const config = vscode.workspace.getConfiguration("codex-project-manager");
+    const config = vscode.workspace.getConfiguration("codex-project-manager");
 
-  return {
-    projectName: metadata.projectName,
-    abbreviation: metadata.meta.abbreviation,
-    sourceLanguage: metadata.languages.find(
-      (lang: LanguageMetadata) =>
-        lang.projectStatus === LanguageProjectStatus.SOURCE
-    ),
-    targetLanguage: metadata.languages.find(
-      (lang: LanguageMetadata) =>
-        lang.projectStatus === LanguageProjectStatus.TARGET
-    ),
-    category: metadata.meta.category,
-    userName: metadata.meta.generator.userName,
-    sourceTextBibles,
-    targetTextBibles,
-  };
+    return {
+      projectName: metadata.projectName,
+      abbreviation: metadata.meta.abbreviation,
+      sourceLanguage: metadata.languages.find(
+        (lang: LanguageMetadata) =>
+          lang.projectStatus === LanguageProjectStatus.SOURCE
+      ),
+      targetLanguage: metadata.languages.find(
+        (lang: LanguageMetadata) =>
+          lang.projectStatus === LanguageProjectStatus.TARGET
+      ),
+      category: metadata.meta.category,
+      userName: metadata.meta.generator.userName,
+      sourceTextBibles,
+      targetTextBibles,
+      targetFont: metadata.targetFont || '',
+    };
+  } catch (error) {
+    console.log("metadata.json not found or couldn't be read");
+    return undefined;
+  }
 }

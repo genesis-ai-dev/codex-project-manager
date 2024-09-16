@@ -3,7 +3,6 @@ import { LanguageMetadata, LanguageProjectStatus } from "codex-types";
 
 import {
   ProjectDetails,
-  // promptForProjectDetails,
   promptForTargetLanguage,
   promptForSourceLanguage,
   updateMetadataFile,
@@ -12,15 +11,15 @@ import {
   getProjectOverview,
 } from "./utils/projectUtils";
 import {
-  checkForMissingFiles,
   downloadBible,
   initializeProject,
-  // setSourceAndTargetLanguage,
   setTargetFont,
 } from "./utils/projectInitializers";
 import { migration_changeDraftFolderToFilesFolder } from "./utils/migrationUtils";
 import { registerProjectManagerViewWebviewProvider } from "./providers/projectManagerViewProvider/projectManagerViewProvider";
 import { configureAutoSave } from "./utils/fileUtils";
+import { ProjectMetadata } from "../types";
+import { importLocalUsfmSourceBible } from './utils/codexNotebookUtils';
 
 const checkIfMetadataIsInitialized = async (): Promise<boolean> => {
   const metadataUri = vscode.Uri.joinPath(
@@ -31,7 +30,7 @@ const checkIfMetadataIsInitialized = async (): Promise<boolean> => {
     await vscode.workspace.fs.stat(metadataUri);
     return true;
   } catch (error) {
-    console.error("Failed to check metadata initialization:", error);
+    // File doesn't exist, which is expected for a new project
     return false;
   }
 };
@@ -41,10 +40,8 @@ const createProjectFiles = async ({
 }: {
   shouldImportUSFM: boolean;
 }) => {
-  // const projectDetails = await promptForProjectDetails();
   try {
     await initializeProject(shouldImportUSFM);
-    await checkForMissingFiles();
   } catch (error) {
     console.error(
       "Error initializing project or checking for missing files:",
@@ -53,13 +50,11 @@ const createProjectFiles = async ({
   }
 };
 
-async function accessMetadataFile() {
+async function accessMetadataFile(): Promise<ProjectMetadata | undefined> {
   // Accessing the metadata file
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders || workspaceFolders.length === 0) {
-    vscode.window.showErrorMessage(
-      "No workspace folder found. Please open a folder to store your project in."
-    );
+    console.log("No workspace folder found. Please open a folder to store your project in.");
     return;
   }
   const workspaceFolder = workspaceFolders[0];
@@ -72,7 +67,8 @@ async function accessMetadataFile() {
     const metadata = JSON.parse(fileData.toString());
     return metadata;
   } catch (error) {
-    //vscode.window.showErrorMessage("Failed to read metadata file: " + error);
+    // File doesn't exist or can't be read, which is expected for a new project
+    console.log("Metadata file not found or cannot be read. This is normal for a new project.");
     return;
   }
 }
@@ -81,8 +77,7 @@ async function reopenWalkthrough() {
   await vscode.commands.executeCommand("workbench.action.closeAllGroups");
 
   await vscode.window.showInformationMessage(
-    "You must complete the walkthrough before proceeding.",
-    { modal: true },
+    "Please complete the walkthrough before proceeding.",
     "OK"
   );
 
@@ -98,10 +93,6 @@ async function reopenWalkthrough() {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-  let isProjectInitialized = context.workspaceState.get<boolean>(
-    "isProjectInitialized",
-    false
-  );
   let isWalkthroughCompleted = context.workspaceState.get<boolean>(
     "isWalkthroughCompleted",
     false
@@ -110,8 +101,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Register webview provider
   registerProjectManagerViewWebviewProvider(context);
+
   // Migrate draft folder to files folder
-  await migration_changeDraftFolderToFilesFolder();
+  try {
+    await migration_changeDraftFolderToFilesFolder();
+  } catch (error) {
+    console.log("Migration not needed or failed. This is normal for a new project.");
+  }
   console.log("Codex Project Manager is now active!");
 
   //wrapper for registered commands
@@ -134,6 +130,9 @@ export async function activate(context: vscode.ExtensionContext) {
   const handleEditorChange = async (editor?: vscode.TextEditor) => {
     // Check if the project overview data is available and complete
     const projectOverview = await getProjectOverview();
+    if (!projectOverview) {
+      return;
+    }
     if (
       projectOverview.projectName &&
       projectOverview.sourceLanguage &&
@@ -217,7 +216,7 @@ export async function activate(context: vscode.ExtensionContext) {
       const isMetadataInitialized = await checkIfMetadataIsInitialized();
 
       if (!isMetadataInitialized) {
-        await checkForMissingFiles();
+        // await checkForMissingFiles();
         await initializeProjectMetadata({});
         configureAutoSave();
       }
@@ -313,8 +312,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const metadata = await accessMetadataFile();
         if (
           !metadata?.languages?.find(
-            (lang: { projectStatus: LanguageProjectStatus }) =>
-              lang.projectStatus === LanguageProjectStatus.SOURCE
+            (lang: any) => lang.projectStatus === LanguageProjectStatus.SOURCE
           )
         ) {
           vscode.commands.executeCommand(
@@ -395,8 +393,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const metadata = await accessMetadataFile();
         if (
           !metadata?.languages?.find(
-            (lang: { projectStatus: LanguageProjectStatus }) =>
-              lang.projectStatus === LanguageProjectStatus.TARGET
+            (lang: any) => lang.projectStatus === LanguageProjectStatus.TARGET
           )
         ) {
           vscode.commands.executeCommand(
@@ -405,8 +402,6 @@ export async function activate(context: vscode.ExtensionContext) {
           return;
         }
         await createProjectFiles({ shouldImportUSFM: false });
-        isProjectInitialized = true;
-        context.workspaceState.update("isProjectInitialized", true);
       })
     ),
     // Register command to initialize an import project
@@ -416,8 +411,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const metadata = await accessMetadataFile();
         if (
           !metadata?.languages?.find(
-            (lang: { projectStatus: LanguageProjectStatus }) =>
-              lang.projectStatus === LanguageProjectStatus.TARGET
+            (lang: any) => lang.projectStatus === LanguageProjectStatus.TARGET
           )
         ) {
           vscode.commands.executeCommand(
@@ -426,15 +420,6 @@ export async function activate(context: vscode.ExtensionContext) {
           return;
         }
         await createProjectFiles({ shouldImportUSFM: true });
-        isProjectInitialized = true;
-        context.workspaceState.update("isProjectInitialized", true);
-      })
-    ),
-    // Register command to generate metadata files
-    vscode.commands.registerCommand(
-      "codex-project-manager.generateMetadataFiles",
-      executeWithRedirecting(async () => {
-        await checkForMissingFiles();
       })
     ),
     // Register command to name the project
@@ -445,7 +430,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const isMetadataInitialized = await checkIfMetadataIsInitialized();
 
         if (!isMetadataInitialized) {
-          await checkForMissingFiles();
+          // await checkForMissingFiles();
           await initializeProjectMetadata({});
           configureAutoSave();
         }
@@ -479,7 +464,7 @@ export async function activate(context: vscode.ExtensionContext) {
       "codex-project-manager.userName",
       executeWithRedirecting(async () => {
         const metadata = await accessMetadataFile();
-        if (!metadata?.projectName || metadata?.projectName === "") {
+        if (!metadata) {
           vscode.commands.executeCommand(
             "codex-project-manager.showProjectOverview"
           );
@@ -487,7 +472,6 @@ export async function activate(context: vscode.ExtensionContext) {
         }
         const isMetadataInitialized = await checkIfMetadataIsInitialized();
         if (!isMetadataInitialized) {
-          await checkForMissingFiles();
           await initializeProjectMetadata({});
           configureAutoSave();
         }
@@ -565,6 +549,9 @@ export async function activate(context: vscode.ExtensionContext) {
         // }
 
         const projectOverview = await getProjectOverview();
+        if (!projectOverview) {
+          return;
+        }
         const isProjectHealthy =
           projectOverview.projectName &&
           projectOverview.sourceLanguage &&
@@ -705,7 +692,9 @@ export async function activate(context: vscode.ExtensionContext) {
           "@ext:project-accelerate.codex-copilot"
         );
       }
-    )
+    ),
+
+    vscode.commands.registerCommand('codex-project-manager.importLocalUsfmSourceBible', importLocalUsfmSourceBible)
   );
 
   // Prompt user to install recommended extensions

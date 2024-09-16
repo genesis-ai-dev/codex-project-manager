@@ -1,11 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from 'react';
 import {
   VSCodeButton,
   VSCodeDataGrid,
   VSCodeDataGridCell,
   VSCodeDataGridRow,
-} from "@vscode/webview-ui-toolkit/react";
-import { ProjectOverview } from "../../../types";
+} from '@vscode/webview-ui-toolkit/react';
+import { ProjectOverview } from '../../../types';
 
 const vscode = acquireVsCodeApi();
 
@@ -13,73 +13,125 @@ function App() {
   const [projectOverview, setProjectOverview] =
     useState<ProjectOverview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [noProjectFound, setNoProjectFound] = useState(false);
+  const [initialLoadAttempted, setInitialLoadAttempted] = useState(false);
 
   const handleMessage = useCallback((event: MessageEvent) => {
-    console.log("Received message:", event.data);
+    console.log('Received message:', event.data);
     const message = event.data;
     switch (message.command) {
-      case "sendProjectOverview": {
-        console.log("Setting project overview:", message.data);
+      case 'sendProjectOverview':
+      case 'projectCreated': {
+        console.log('Setting project overview:', message.data);
         setProjectOverview(message.data);
         setIsLoading(false);
+        setError(null);
+        setNoProjectFound(false);
+        setInitialLoadAttempted(true);
+        break;
+      }
+      case 'noProjectFound': {
+        setNoProjectFound(true);
+        setIsLoading(false);
+        setError(null);
+        setInitialLoadAttempted(true);
+        break;
+      }
+      case 'refreshProjectOverview': {
+        // Request a fresh project overview
+        vscode.postMessage({ command: 'requestProjectOverview' });
+        break;
+      }
+      case 'error': {
+        console.error('Error received:', message.message);
+        setError(message.message);
+        setIsLoading(false);
+        setInitialLoadAttempted(true);
         break;
       }
       default:
-        console.log("Unhandled message command:", message.command);
+        console.log('Unhandled message command:', message.command);
         break;
     }
   }, []);
 
   useEffect(() => {
-    window.addEventListener("message", handleMessage);
+    window.addEventListener('message', handleMessage);
 
     // Signal that the webview is ready
-    vscode.postMessage({ command: "webviewReady" });
+    vscode.postMessage({ command: 'webviewReady' });
 
     return () => {
-      window.removeEventListener("message", handleMessage);
+      window.removeEventListener('message', handleMessage);
     };
   }, [handleMessage]);
 
-  // Log state changes
+  // Log state changes and request project overview
   useEffect(() => {
-    console.log("Project Overview updated:", projectOverview);
-    if (!projectOverview) {
+    console.log('Project Overview updated:', projectOverview);
+    if (!projectOverview && !initialLoadAttempted) {
       setIsLoading(true);
-      vscode.postMessage({ command: "requestProjectOverview" });
+      vscode.postMessage({ command: 'requestProjectOverview' });
     }
-  }, [projectOverview]);
+  }, [projectOverview, initialLoadAttempted]);
+
+  // Delay showing error message
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        if (!projectOverview && !noProjectFound) {
+          setError('Failed to load project overview. Please try again.');
+        }
+      }, 2000); // 2 second delay
+
+      return () => clearTimeout(timer);
+    }
+  }, [error, projectOverview, noProjectFound]);
 
   const handleAction = (command: string, data?: any) => {
+    setIsLoading(true);
+    setError(null);
     vscode.postMessage({ command, data });
   };
 
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "start",
-        alignItems: "center",
-        height: "100vh",
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'start',
+        alignItems: 'center',
+        height: '100vh',
       }}
     >
       {isLoading ? (
         <div>Loading project overview...</div>
+      ) : error && !projectOverview && !noProjectFound ? (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '2rem',
+          }}
+        >
+          <p style={{ color: 'var(--vscode-errorForeground)' }}>{error}</p>
+          <VSCodeButton onClick={() => handleAction('requestProjectOverview')}>
+            Retry
+          </VSCodeButton>
+        </div>
+      ) : noProjectFound ? (
+        <div>
+          <VSCodeButton
+            onClick={() => handleAction('createNewProject')}
+            style={{ marginTop: '2rem' }}
+          >
+            <i className="codicon codicon-plus"></i> Create New Project
+          </VSCodeButton>
+        </div>
       ) : projectOverview ? (
         <VSCodeDataGrid grid-template-columns="1fr 1fr auto">
-          {/* <VSCodeDataGridRow row-type="header">
-            <VSCodeDataGridCell cell-type="columnheader" grid-column="1">
-              Property
-            </VSCodeDataGridCell>
-            <VSCodeDataGridCell cell-type="columnheader" grid-column="2">
-              Value
-            </VSCodeDataGridCell>
-            <VSCodeDataGridCell cell-type="columnheader" grid-column="3">
-              Action
-            </VSCodeDataGridCell>
-          </VSCodeDataGridRow> */}
-
           <VSCodeDataGridRow>
             <VSCodeDataGridCell grid-column="1">
               Project Name
@@ -88,20 +140,20 @@ function App() {
               grid-column="2"
               style={{
                 color: projectOverview.projectName
-                  ? "inherit"
-                  : "var(--vscode-errorForeground)",
+                  ? 'inherit'
+                  : 'var(--vscode-errorForeground)',
               }}
             >
-              {projectOverview.projectName ?? "Missing"}
+              {projectOverview.projectName ?? 'Missing'}
               {!projectOverview.projectName && (
                 <i
                   className="codicon codicon-warning"
-                  style={{ marginLeft: "8px" }}
+                  style={{ marginLeft: '8px' }}
                 ></i>
               )}
             </VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="3">
-              <VSCodeButton onClick={() => handleAction("renameProject")}>
+              <VSCodeButton onClick={() => handleAction('renameProject')}>
                 <i className="codicon codicon-pencil"></i>
               </VSCodeButton>
             </VSCodeDataGridCell>
@@ -113,20 +165,20 @@ function App() {
               grid-column="2"
               style={{
                 color: projectOverview.userName
-                  ? "inherit"
-                  : "var(--vscode-errorForeground)",
+                  ? 'inherit'
+                  : 'var(--vscode-errorForeground)',
               }}
             >
-              {projectOverview.userName ?? "Missing"}
+              {projectOverview.userName ?? 'Missing'}
               {!projectOverview.userName && (
                 <i
                   className="codicon codicon-warning"
-                  style={{ marginLeft: "8px" }}
+                  style={{ marginLeft: '8px' }}
                 ></i>
               )}
             </VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="3">
-              <VSCodeButton onClick={() => handleAction("changeUserName")}>
+              <VSCodeButton onClick={() => handleAction('changeUserName')}>
                 <i className="codicon codicon-account"></i>
               </VSCodeButton>
             </VSCodeDataGridCell>
@@ -140,23 +192,23 @@ function App() {
               grid-column="2"
               style={{
                 color: projectOverview.sourceLanguage
-                  ? "inherit"
-                  : "var(--vscode-errorForeground)",
+                  ? 'inherit'
+                  : 'var(--vscode-errorForeground)',
               }}
             >
               {projectOverview.sourceLanguage
                 ? Object.entries(projectOverview.sourceLanguage)[0][1]
-                : "Missing"}
+                : 'Missing'}
               {!projectOverview.sourceLanguage && (
                 <i
                   className="codicon codicon-warning"
-                  style={{ marginLeft: "8px" }}
+                  style={{ marginLeft: '8px' }}
                 ></i>
               )}
             </VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="3">
               <VSCodeButton
-                onClick={() => handleAction("changeSourceLanguage")}
+                onClick={() => handleAction('changeSourceLanguage')}
               >
                 <i className="codicon codicon-source-control"></i>
               </VSCodeButton>
@@ -171,23 +223,23 @@ function App() {
               grid-column="2"
               style={{
                 color: projectOverview.targetLanguage
-                  ? "inherit"
-                  : "var(--vscode-errorForeground)",
+                  ? 'inherit'
+                  : 'var(--vscode-errorForeground)',
               }}
             >
               {projectOverview.targetLanguage
                 ? Object.entries(projectOverview.targetLanguage)[0][1]
-                : "Missing"}
+                : 'Missing'}
               {!projectOverview.targetLanguage && (
                 <i
                   className="codicon codicon-warning"
-                  style={{ marginLeft: "8px" }}
+                  style={{ marginLeft: '8px' }}
                 ></i>
               )}
             </VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="3">
               <VSCodeButton
-                onClick={() => handleAction("changeTargetLanguage")}
+                onClick={() => handleAction('changeTargetLanguage')}
               >
                 <i className="codicon codicon-globe"></i>
               </VSCodeButton>
@@ -202,20 +254,20 @@ function App() {
               grid-column="2"
               style={{
                 color: projectOverview.abbreviation
-                  ? "inherit"
-                  : "var(--vscode-errorForeground)",
+                  ? 'inherit'
+                  : 'var(--vscode-errorForeground)',
               }}
             >
-              {projectOverview.abbreviation?.toString() ?? "Missing"}
+              {projectOverview.abbreviation?.toString() ?? 'Missing'}
               {!projectOverview.abbreviation && (
                 <i
                   className="codicon codicon-warning"
-                  style={{ marginLeft: "8px" }}
+                  style={{ marginLeft: '8px' }}
                 ></i>
               )}
             </VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="3">
-              <VSCodeButton onClick={() => handleAction("editAbbreviation")}>
+              <VSCodeButton onClick={() => handleAction('editAbbreviation')}>
                 <i className="codicon codicon-pencil"></i>
               </VSCodeButton>
             </VSCodeDataGridCell>
@@ -227,20 +279,20 @@ function App() {
               grid-column="2"
               style={{
                 color: projectOverview.category
-                  ? "inherit"
-                  : "var(--vscode-errorForeground)",
+                  ? 'inherit'
+                  : 'var(--vscode-errorForeground)',
               }}
             >
-              {String(projectOverview.category) ?? "Missing"}
+              {String(projectOverview.category) ?? 'Missing'}
               {!projectOverview.category && (
                 <i
                   className="codicon codicon-warning"
-                  style={{ marginLeft: "8px" }}
+                  style={{ marginLeft: '8px' }}
                 ></i>
               )}
             </VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="3">
-              <VSCodeButton onClick={() => handleAction("selectCategory")}>
+              <VSCodeButton onClick={() => handleAction('selectCategory')}>
                 <i className="codicon codicon-pencil"></i>
               </VSCodeButton>
             </VSCodeDataGridCell>
@@ -256,23 +308,23 @@ function App() {
                 color:
                   projectOverview.sourceTextBibles &&
                   projectOverview.sourceTextBibles.length > 0
-                    ? "inherit"
-                    : "var(--vscode-errorForeground)",
+                    ? 'inherit'
+                    : 'var(--vscode-errorForeground)',
               }}
             >
               {projectOverview.sourceTextBibles &&
               projectOverview.sourceTextBibles.length > 0 ? (
                 <ul>
                   {projectOverview.sourceTextBibles.map((bible) => {
-                    const fileName = bible.path.split("/").pop() || "";
+                    const fileName = bible.path.split('/').pop() || '';
                     return (
-                      <li key={bible.path} style={{ marginBottom: "4px" }}>
+                      <li key={bible.path} style={{ marginBottom: '4px' }}>
                         <a
                           href="#"
-                          onClick={() => handleAction("openBible", bible)}
+                          onClick={() => handleAction('openBible', bible)}
                           style={{
-                            textDecoration: "none",
-                            color: "var(--vscode-textLink-foreground)",
+                            textDecoration: 'none',
+                            color: 'var(--vscode-textLink-foreground)',
                           }}
                         >
                           {fileName}
@@ -286,74 +338,34 @@ function App() {
                   Missing
                   <i
                     className="codicon codicon-warning"
-                    style={{ marginLeft: "8px" }}
+                    style={{ marginLeft: '8px' }}
                   ></i>
                 </>
               )}
             </VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="3">
               <VSCodeButton
-                onClick={() => handleAction("downloadSourceTextBibles")}
+                onClick={() => handleAction('downloadSourceTextBibles')}
               >
                 <i className="codicon codicon-cloud-download"></i>
               </VSCodeButton>
             </VSCodeDataGridCell>
           </VSCodeDataGridRow>
-
-          {/* <VSCodeDataGridRow>
-            <VSCodeDataGridCell grid-column="1">
-              Target Text Bibles
-            </VSCodeDataGridCell>
-            <VSCodeDataGridCell grid-column="2">
-              <ul>
-                {projectOverview.targetTextBibles?.map((bible) => {
-                  const fileName = bible.path.split('/').pop() || '';
-                  return (
-                    <li key={bible.path} style={{ marginBottom: '4px' }}>
-                      <a
-                        href="#"
-                        onClick={() => handleAction('openBible', bible)}
-                        style={{
-                          textDecoration: 'none',
-                          color: 'var(--vscode-textLink-foreground)',
-                        }}
-                      >
-                        {fileName}
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            </VSCodeDataGridCell>
-            <VSCodeDataGridCell grid-column="3">
-              <VSCodeButton
-                onClick={() => handleAction('downloadTargetTextBibles')}
-              >
-                <i className="codicon codicon-cloud-download"></i>
-              </VSCodeButton>
-            </VSCodeDataGridCell>
-          </VSCodeDataGridRow> */}
 
           <VSCodeDataGridRow>
             <VSCodeDataGridCell grid-column="1">
               Copilot Settings
             </VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="3">
-              <VSCodeButton onClick={() => handleAction("openAISettings")}>
+              <VSCodeButton onClick={() => handleAction('openAISettings')}>
                 <i className="codicon codicon-settings"></i>
               </VSCodeButton>
             </VSCodeDataGridCell>
           </VSCodeDataGridRow>
         </VSCodeDataGrid>
       ) : (
-        "No project overview available"
+        'No project overview available'
       )}
-      <VSCodeButton
-        onClick={() => handleAction("createNewProject")}
-        style={{ marginTop: "2rem" }}
-      >
-        <i className="codicon codicon-plus"></i> Create New Project
-      </VSCodeButton>
     </div>
   );
 }

@@ -18,18 +18,18 @@ import {
 
 const ROOT_PATH = getWorkSpaceFolder();
 
-const PATHS_TO_POPULATE = [
-  // "metadata.json", // This is where we store the project metadata in scripture burrito format, but we create this using the project initialization command
-  { filePath: "files/" }, // This is where we store the project files, including project.dictionary and embedding dbs
-  { filePath: "files/target/" }, // This is where we store the drafted scripture in particular as .codex files
-  { filePath: "files/project.dictionary", defaultContent: "" }, // This is where we store the project dictionary
-  { filePath: "comments.json", defaultContent: "" }, // This is where we store the VS Code comments api comments, such as on .bible files
-  { filePath: "file-comments.json", defaultContent: "[]" }, // We can't use the VS Code comments api for notebooks (.codex files) and other non standard files, so a second files avoids overwriting conflicts
-  { filePath: "chat-threads.json", defaultContent: "[]" }, // This is where chat thread conversations are saved
-  { filePath: ".project/sourceTextBibles/" }, // This is where we store the source text bibles
-  { filePath: ".project/targetTextBibles/" }, // This is where we store the target text bibles
+// const PATHS_TO_POPULATE = [
+//   { filePath: "metadata.json", defaultContent: "{}" }, // This is where we store the project metadata in scripture burrito format, but we create this using the project initialization command
+//   { filePath: "files/" }, // This is where we store the project files, including project.dictionary and embedding dbs
+//   { filePath: "files/target/" }, // This is where we store the drafted scripture in particular as .codex files
+//   { filePath: "files/project.dictionary", defaultContent: "{}" }, // This is where we store the project dictionary
+//   { filePath: "comments.json", defaultContent: "[]" }, // This is where we store the VS Code comments api comments, such as on .bible files
+//   { filePath: "file-comments.json", defaultContent: "[]" }, // We can't use the VS Code comments api for notebooks (.codex files) and other non standard files, so a second files avoids overwriting conflicts
+//   { filePath: "chat-threads.json", defaultContent: "[]" }, // This is where chat thread conversations are saved
+//   { filePath: ".project/sourceTextBibles/" }, // This is where we store the source text bibles
+//   { filePath: ".project/targetTextBibles/" }, // This is where we store the target text bibles
 
-];
+// ];
 
 
 export async function downloadBible(languageType: "source" | "target"): Promise<string | undefined> {
@@ -408,40 +408,40 @@ export async function initializeProject(shouldImportUSFM: boolean) {
   );
 }
 
-export async function checkForMissingFiles() {
-  if (ROOT_PATH) {
-    vscode.window.showInformationMessage(
-      "Checking for missing project files..."
-    );
-    for (const fileToPopulate of PATHS_TO_POPULATE) {
-      const fullPath = vscode.Uri.joinPath(
-        vscode.Uri.file(ROOT_PATH),
-        fileToPopulate.filePath
-      );
-      try {
-        await vscode.workspace.fs.stat(fullPath);
-      } catch (error) {
-        // Determine if the missing path is a file or a directory based on its name
-        if (fileToPopulate.filePath.includes(".")) {
-          // Assuming it's a file if there's an extension
-          vscode.window.showInformationMessage(
-            `Creating file: ${fileToPopulate}`
-          );
-          await vscode.workspace.fs.writeFile(
-            fullPath,
-            new TextEncoder().encode(fileToPopulate.defaultContent || "")
-          ); // Create an empty file
-        } else {
-          // Assuming it's a directory if there's no file extension
-          vscode.window.showInformationMessage(
-            `Creating directory: ${fileToPopulate}`
-          );
-          await vscode.workspace.fs.createDirectory(fullPath);
-        }
-      }
-    }
-  }
-}
+// export async function checkForMissingFiles() {
+//   if (ROOT_PATH) {
+//     vscode.window.showInformationMessage(
+//       "Checking for missing project files..."
+//     );
+//     for (const fileToPopulate of PATHS_TO_POPULATE) {
+//       const fullPath = vscode.Uri.joinPath(
+//         vscode.Uri.file(ROOT_PATH),
+//         fileToPopulate.filePath
+//       );
+//       try {
+//         await vscode.workspace.fs.stat(fullPath);
+//       } catch (error) {
+//         // Determine if the missing path is a file or a directory based on its name
+//         if (fileToPopulate.filePath.includes(".")) {
+//           // Assuming it's a file if there's an extension
+//           vscode.window.showInformationMessage(
+//             `Creating file: ${fileToPopulate}`
+//           );
+//           await vscode.workspace.fs.writeFile(
+//             fullPath,
+//             new TextEncoder().encode(fileToPopulate.defaultContent || "")
+//           ); // Create an empty file
+//         } else {
+//           // Assuming it's a directory if there's no file extension
+//           vscode.window.showInformationMessage(
+//             `Creating directory: ${fileToPopulate}`
+//           );
+//           await vscode.workspace.fs.createDirectory(fullPath);
+//         }
+//       }
+//     }
+//   }
+// }
 
 export async function handleConfig() {
   const config = vscode.workspace.getConfiguration();

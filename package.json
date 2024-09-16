@@ -113,7 +113,7 @@
               "altText": "Open Project Folder"
             },
             "completionEvents": [
-              "onFolderSelected"
+              "onSettingChanged:workbenchState"
             ],
             "when": "workbenchState == empty"
           },

@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { jumpToCellInNotebook } from "../../utils";
 import { ProjectOverview } from "../../../types";
 import { getProjectOverview } from "../../utils/projectUtils";
+import { initializeProjectMetadata } from "../../utils/projectUtils";
 
 async function simpleOpen(uri: string) {
   try {
@@ -106,8 +107,7 @@ const loadWebviewHtml = (
       Use a content security policy to only allow loading images from https or from our extension directory,
       and only allow scripts that have a specific nonce.
     -->
-    <meta http-equiv="Content-Security-Policy" content="img-src https: data:; style-src 'unsafe-inline' ${
-      webviewView.webview.cspSource
+    <meta http-equiv="Content-Security-Policy" content="img-src https: data:; style-src 'unsafe-inline' ${webviewView.webview.cspSource
     }; script-src 'nonce-${nonce}';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="${styleResetUri}" rel="stylesheet">
@@ -216,9 +216,7 @@ export class CustomWebviewProvider implements vscode.WebviewViewProvider {
           );
           break;
         case "createNewProject":
-          vscode.commands.executeCommand(
-            "codex-project-manager.startWalkthrough"
-          );
+          await this.createNewProject();
           break;
         case "openBible":
           vscode.window.showInformationMessage(
@@ -244,22 +242,65 @@ export class CustomWebviewProvider implements vscode.WebviewViewProvider {
   private webviewHasInitialProjectOverviewData: boolean = false;
 
   private async updateProjectOverview(force: boolean = false) {
-    const newProjectOverview = await getProjectOverview();
-    if (!this.webviewHasInitialProjectOverviewData || force) {
-      console.log("Sending initial project overview data to webview");
+    try {
+      const newProjectOverview = await getProjectOverview();
+
+      if (!newProjectOverview) {
+        // If no project overview is available, send a message to show the "Create New Project" button
+        this._view?.webview.postMessage({
+          command: "noProjectFound",
+        });
+        this.webviewHasInitialProjectOverviewData = true;
+      } else if (!this.webviewHasInitialProjectOverviewData || force) {
+        this._view?.webview.postMessage({
+          command: "sendProjectOverview",
+          data: newProjectOverview,
+        });
+        this.webviewHasInitialProjectOverviewData = true;
+      } else if (
+        JSON.stringify(newProjectOverview) !==
+        JSON.stringify(this._projectOverview)
+      ) {
+        this._projectOverview = newProjectOverview;
+        this._view?.webview.postMessage({
+          command: "sendProjectOverview",
+          data: this._projectOverview,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating project overview:", error);
       this._view?.webview.postMessage({
-        command: "sendProjectOverview",
-        data: newProjectOverview,
+        command: "error",
+        message: "Failed to load project overview. Please try again.",
       });
-      this.webviewHasInitialProjectOverviewData = true;
-    } else if (
-      JSON.stringify(newProjectOverview) !==
-      JSON.stringify(this._projectOverview)
-    ) {
-      this._projectOverview = newProjectOverview;
+    }
+  }
+
+  private async createNewProject() {
+    try {
+      await initializeProjectMetadata({});
+      // Wait a short moment to ensure the file system has time to update
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const newProjectOverview = await getProjectOverview();
+      if (newProjectOverview) {
+        this._projectOverview = newProjectOverview;
+        this._view?.webview.postMessage({
+          command: "projectCreated",
+          data: newProjectOverview,
+        });
+      } else {
+        console.warn("Project created but overview not immediately available");
+        // Instead of throwing an error, we'll send a message to refresh
+        this._view?.webview.postMessage({
+          command: "refreshProjectOverview",
+        });
+      }
+    } catch (error) {
+      console.error("Error creating new project:", error);
       this._view?.webview.postMessage({
-        command: "sendProjectOverview",
-        projectOverview: this._projectOverview,
+        command: "error",
+        message: "Failed to create new project. Please try again.",
       });
     }
   }
@@ -276,4 +317,7 @@ export function registerProjectManagerViewWebviewProvider(
       provider
     )
   );
+
+  // .show() the sidebar / view
+  vscode.commands.executeCommand("project-manager-sidebar.show");
 }

@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 
 export const migration_changeDraftFolderToFilesFolder = async () => {
-  // Assuming your workspace has a single root folder
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (workspaceFolders && workspaceFolders.length > 0) {
     const rootUri = workspaceFolders[0].uri;
@@ -10,11 +9,11 @@ export const migration_changeDraftFolderToFilesFolder = async () => {
     const filesUri = vscode.Uri.joinPath(rootUri, "files");
 
     try {
-      // Check if the 'metadata.json' file exists by trying to read it
+      // Check if the 'metadata.json' file exists
       await vscode.workspace.fs.stat(metadataUri);
 
+      // Check if the 'drafts' folder exists
       try {
-        // Check if the 'drafts' folder exists by trying to read it
         const draftsFolder = await vscode.workspace.fs.readDirectory(draftsUri);
 
         // If the read succeeds, the folder exists, and we can attempt to rename it
@@ -25,16 +24,11 @@ export const migration_changeDraftFolderToFilesFolder = async () => {
           console.log('Renamed "drafts" folder to "files".');
         }
       } catch (error) {
-        // If the read fails, the folder likely doesn't exist, so we catch the error
-        // You might want to check the error code to ensure it's because the folder doesn't exist
-        // and not due to some other issue
-        console.error(
-          'Error checking for or renaming "drafts" to "files":',
-          error
-        );
+        // If the 'drafts' folder doesn't exist, we quietly pass
+        console.log('The "drafts" folder does not exist. No action needed.');
       }
     } catch (error) {
-      console.error('The "metadata.json" file does not exist:', error);
+      console.log('The "metadata.json" file does not exist. No action needed.');
     }
   }
 };

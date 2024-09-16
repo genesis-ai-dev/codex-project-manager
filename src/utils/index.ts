@@ -70,9 +70,7 @@ export async function getProjectMetadata(): Promise<Project> {
         }
       },
       (err) => {
-        vscode.window.showErrorMessage(
-          `Failed to read project metadata: ${err.message}`
-        );
+        console.error(`Failed to read project metadata: ${err.message}`);
       }
     );
 

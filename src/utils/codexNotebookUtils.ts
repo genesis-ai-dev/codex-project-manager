@@ -1,10 +1,8 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
 import { CodexContentSerializer } from "./serializer";
 import { generateFiles as generateFile } from "../utils/fileUtils";
 import { getAllBookRefs, getAllBookChapterRefs, getAllVrefs } from ".";
 import { vrefData } from "./verseRefUtils/verseData";
-import path from "path";
 import grammar from "usfm-grammar";
 
 export const NOTEBOOK_TYPE = "codex-type";
@@ -49,9 +47,9 @@ export const createCodexNotebook = async (
   const cellData =
     cells.length > 0
       ? cells.map(
-          (cell) =>
-            new vscode.NotebookCellData(cell.kind, cell.value, cell.languageId)
-        )
+        (cell) =>
+          new vscode.NotebookCellData(cell.kind, cell.value, cell.languageId)
+      )
       : [];
   const data = new vscode.NotebookData(cellData);
   const doc = await vscode.workspace.openNotebookDocument(NOTEBOOK_TYPE, data);
@@ -77,36 +75,42 @@ const importProjectAndConvertToJson = async (
 ): Promise<ParsedUSFM[]> => {
   const projectFileContent: ParsedUSFM[] = [];
   const directoryPath = folderWithUsfmToConvert[0].fsPath;
-  const files = await fs.promises.readdir(directoryPath);
 
-  for (const file of files) {
-    if (
-      path.extname(file) === ".SFM" ||
-      path.extname(file) === ".sfm" ||
-      path.extname(file) === ".USFM" ||
-      path.extname(file) === ".usfm"
-    ) {
-      const contents = await fs.promises.readFile(
-        path.join(directoryPath, file),
-        "utf8"
-      );
-      let fileName = "";
-      try {
-        const myUsfmParser = new grammar.USFMParser(
-          contents,
-          grammar.LEVEL.RELAXED
-        );
+  try {
+    const files = await vscode.workspace.fs.readDirectory(folderWithUsfmToConvert[0]);
 
-        fileName = path.basename(file, path.extname(file)) + ".json";
-        const jsonOutput = myUsfmParser.toJSON() as any as ParsedUSFM;
-        projectFileContent.push(jsonOutput);
-      } catch (error) {
-        vscode.window.showErrorMessage(
-          `Error generating files for ${fileName}: ${error}`
-        );
+    for (const [file] of files) {
+      if (
+        file.endsWith(".SFM") ||
+        file.endsWith(".sfm") ||
+        file.endsWith(".USFM") ||
+        file.endsWith(".usfm")
+      ) {
+        const fileUri = vscode.Uri.joinPath(folderWithUsfmToConvert[0], file);
+        const contents = await vscode.workspace.fs.readFile(fileUri);
+        let fileName = "";
+        try {
+          const myUsfmParser = new grammar.USFMParser(
+            new TextDecoder("utf-8").decode(contents),
+            grammar.LEVEL.RELAXED
+          );
+
+          fileName = file.replace(/\.[^/.]+$/, "") + ".json";
+          const jsonOutput = myUsfmParser.toJSON() as any as ParsedUSFM;
+          projectFileContent.push(jsonOutput);
+        } catch (error) {
+          vscode.window.showErrorMessage(
+            `Error generating files for ${fileName}: ${error}`
+          );
+        }
       }
     }
+  } catch (error) {
+    vscode.window.showErrorMessage(`Error reading directory: ${error instanceof Error ? error.message : String(error)}`);
+    // Optionally, you can log the error or handle it in any other way you see fit
+    console.error("Error reading directory:", error);
   }
+
   return projectFileContent;
 };
 
@@ -191,17 +195,15 @@ export async function createProjectNotebooks({
     const serializer = new CodexContentSerializer();
     const notebookData = new vscode.NotebookData(cells);
 
-    // const project = await getProjectMetadata();
     const notebookCreationPromise = serializer
       .serializeNotebook(
         notebookData,
         new vscode.CancellationTokenSource().token
       )
       .then((notebookFile) => {
-        // Save the notebook using generateFiles
-        const filePath = `files/target/${book}.codex`;
+        const filePath = vscode.Uri.joinPath(vscode.Uri.file('files/target'), `${book}.codex`);
         return generateFile({
-          filepath: filePath,
+          filepath: filePath.fsPath,
           fileContent: notebookFile,
           shouldOverWrite,
         });
@@ -285,10 +287,9 @@ export async function createProjectNotebooksFromTxt({
         const serializer = new CodexContentSerializer();
         const notebookFile = await serializer.serializeNotebook(notebookData, new vscode.CancellationTokenSource().token);
 
-        // Save the notebook
-        const notebookPath = `files/target/${path.basename(file, '.txt')}.codex`;
+        const notebookPath = vscode.Uri.joinPath(vscode.Uri.file('files/target'), `${file.replace('.txt', '.codex')}`);
         return generateFile({
-          filepath: notebookPath,
+          filepath: notebookPath.fsPath,
           fileContent: notebookFile,
           shouldOverWrite,
         });
@@ -304,16 +305,15 @@ export async function createProjectCommentFiles({
 }: {
   shouldOverWrite?: boolean;
 } = {}) {
-  // Save the notebook using generateFiles
-  const commentsFilePath = `comments.json`;
-  const notebookCommentsFilePath = `file-comments.json`;
+  const commentsFilePath = vscode.Uri.file('comments.json');
+  const notebookCommentsFilePath = vscode.Uri.file('file-comments.json');
   await generateFile({
-    filepath: commentsFilePath,
+    filepath: commentsFilePath.fsPath,
     fileContent: new TextEncoder().encode("[]"),
     shouldOverWrite,
   });
   await generateFile({
-    filepath: notebookCommentsFilePath,
+    filepath: notebookCommentsFilePath.fsPath,
     fileContent: new TextEncoder().encode("[]"),
     shouldOverWrite,
   });
