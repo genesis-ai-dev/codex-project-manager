@@ -43,6 +43,10 @@ export const getWorkSpaceFolder = (): string | undefined => {
   return workspaceFolder;
 };
 
+export const getWorkSpaceUri = (): vscode.Uri | undefined => {
+  return vscode.workspace.workspaceFolders?.[0].uri;
+};
+
 export async function getProjectMetadata(): Promise<Project> {
   /**
    * Generic function to get the project metadata

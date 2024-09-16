@@ -1,7 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/naming-convention
 import * as vscode from "vscode";
-import { getWorkSpaceFolder } from ".";
-import * as path from "path";
+import { getWorkSpaceUri } from ".";
 import { ChatMessageThread, NotebookCommentThread } from "../../types";
 
 export const generateFiles = async ({
@@ -9,21 +8,30 @@ export const generateFiles = async ({
   fileContent,
   shouldOverWrite,
 }: {
-  filepath: string;
+  filepath: string | string[];
   fileContent: Uint8Array;
   shouldOverWrite: boolean;
 }) => {
-  const workspaceFolder = getWorkSpaceFolder();
+  const workspaceFolder = getWorkSpaceUri();
 
   if (!workspaceFolder) {
     return;
   }
 
+  let resolvedFilePath: string;
+
+  if (Array.isArray(filepath)) {
+    resolvedFilePath = vscode.Uri.joinPath(workspaceFolder, ...filepath).fsPath;
+  } else {
+    if (filepath.startsWith("/")) {
+      resolvedFilePath = filepath;
+    } else {
+      resolvedFilePath = `/${filepath}`;
+    }
+  }
+
   const newFilePath = vscode.Uri.file(
-    path.join(
-      workspaceFolder,
-      filepath.startsWith("/") ? filepath : `/${filepath}`
-    )
+    vscode.Uri.joinPath(workspaceFolder, resolvedFilePath).fsPath
   );
   let fileSuccessfullyCreated: boolean = false;
 

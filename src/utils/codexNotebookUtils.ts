@@ -318,3 +318,89 @@ export async function createProjectCommentFiles({
     shouldOverWrite,
   });
 }
+
+export async function importLocalUsfmSourceBible() {
+  const folderUri = await vscode.window.showOpenDialog({
+    canSelectFiles: false,
+    canSelectFolders: true,
+    canSelectMany: false,
+    openLabel: 'Select USFM Folder'
+  });
+
+  if (!folderUri || folderUri.length === 0) {
+    vscode.window.showInformationMessage('No folder selected');
+    return;
+  }
+
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    vscode.window.showErrorMessage('No workspace folder found');
+    return;
+  }
+
+  const usfmFiles = await vscode.workspace.fs.readDirectory(folderUri[0]);
+  const bibleContent: string[] = [];
+
+  console.log(`Found ${usfmFiles.length} files in the selected folder`);
+
+  const usfmFileExtensions = ['.usfm', '.sfm', '.SFM', '.USFM'];
+  for (const [fileName, fileType] of usfmFiles) {
+    if (fileType === vscode.FileType.File && usfmFileExtensions.some(ext => fileName.toLowerCase().endsWith(ext))) {
+      console.log(`Processing file: ${fileName}`);
+      const fileUri = vscode.Uri.joinPath(folderUri[0], fileName);
+      const fileContent = await vscode.workspace.fs.readFile(fileUri);
+      console.log(`File content length: ${fileContent.byteLength} bytes`);
+
+      try {
+        const usfmParser = new grammar.USFMParser(new TextDecoder().decode(fileContent,));
+        const jsonOutput = usfmParser.toJSON() as any as ParsedUSFM;
+        console.log(`Parsed JSON output for ${fileName}:`, JSON.stringify(jsonOutput, null, 2));
+
+        // Convert JSON output to .bible format
+        const bookCode = jsonOutput.book.bookCode;
+        const verses = jsonOutput.chapters.flatMap((chapter: any) =>
+          chapter.contents.filter((content: any) => content.verseNumber !== undefined || content.verseText !== undefined)
+            .map((verse: any) => `${bookCode} ${chapter.chapterNumber}:${verse.verseNumber} ${verse.verseText || verse.text}`)
+        );
+
+        console.log(`Extracted ${verses.length} verses from ${fileName}`);
+        bibleContent.push(...verses);
+      } catch (error) {
+        console.error(`Error processing file ${fileName}:`, error);
+        vscode.window.showErrorMessage(`Error processing file ${fileName}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  }
+
+  console.log(`Total verses extracted: ${bibleContent.length}`);
+
+  const bibleFileName = await vscode.window.showInputBox({
+    prompt: 'Enter a name for the Bible file',
+    placeHolder: 'e.g., MyBible'
+  });
+
+  if (!bibleFileName) {
+    vscode.window.showInformationMessage('Bible import cancelled');
+    return;
+  }
+  // Fix: Use the workspace folder directly to create the target path
+  const targetFolderPath = vscode.Uri.joinPath(workspaceFolder.uri, '.project', 'sourceTextBibles');
+  const bibleFilePath = vscode.Uri.joinPath(targetFolderPath, `${bibleFileName}.bible`);
+
+  // Ensure the target folder exists
+  try {
+    await vscode.workspace.fs.createDirectory(targetFolderPath);
+  } catch (error) {
+    console.error(`Error creating directory: ${error instanceof Error ? error.message : String(error)}`);
+    vscode.window.showErrorMessage(`Failed to create directory: ${targetFolderPath.toString()}`);
+    return;
+  }
+
+  try {
+    vscode.workspace.fs.writeFile(bibleFilePath, Buffer.from(bibleContent.join('\n'), 'utf-8'));
+    vscode.window.showInformationMessage(`Bible imported successfully: ${bibleFilePath.toString()}`);
+  } catch (error) {
+    console.error(`Error generating file: ${error instanceof Error ? error.message : String(error)}`);
+    vscode.window.showErrorMessage(`Failed to create Bible file: ${bibleFilePath.toString()}`);
+  }
+}

@@ -78,6 +78,11 @@
         "command": "codex-project-manager.reinstallExtensions",
         "title": "Reinstall Extensions",
         "category": "Codex Project Management"
+      },
+      {
+        "command": "codex-project-manager.importLocalUsfmSourceBible",
+        "title": "Import Local USFM Source Bible",
+        "category": "Codex Project Management"
       }
     ],
     "views": {
@@ -192,6 +197,20 @@
             },
             "completionEvents": [
               "onCommand:codex-project-manager.selectCategory"
+            ],
+            "when": "workbenchState !== empty"
+          },
+          {
+            "id": "addSourceBible",
+            "title": "Add Source Bible",
+            "description": "Now that we have a folder, let's add a source Bible to your Codex project.\n[Download Source Text Bible](command:codex-project-manager.downloadSourceTextBibles)\n or \n [Import Local USFM Bible](command:codex-project-manager.importLocalUsfmSourceBible)",
+            "media": {
+              "image": "./src/media/add-source-bible.png",
+              "altText": "Add Source Bible"
+            },
+            "completionEvents": [
+              "onCommand:codex-project-manager.downloadSourceTextBibles",
+              "onCommand:codex-project-manager.importLocalUsfmSourceBible"
             ],
             "when": "workbenchState !== empty"
           },
