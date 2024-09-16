@@ -187,6 +187,9 @@ export class CustomWebviewProvider implements vscode.WebviewViewProvider {
           break;
         case "webviewReady":
           break;
+        case "exportProjectAsPlaintext":
+          await vscode.commands.executeCommand("codex-editor-extension.exportCodexContent");
+          break;
         default:
           console.error(`Unknown command: ${message.command}`);
       }

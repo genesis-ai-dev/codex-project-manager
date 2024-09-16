@@ -367,6 +367,15 @@ function App() {
               </VSCodeButton>
             </VSCodeDataGridCell>
           </VSCodeDataGridRow>
+
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell grid-column="1">Export Project</VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="3">
+              <VSCodeButton onClick={() => handleAction('exportProjectAsPlaintext')}>
+                <i className="codicon codicon-export"></i>
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
         </VSCodeDataGrid>
       ) : (
         'No project overview available'
