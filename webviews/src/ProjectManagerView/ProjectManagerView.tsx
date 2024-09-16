@@ -16,6 +16,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [noProjectFound, setNoProjectFound] = useState(false);
   const [initialLoadAttempted, setInitialLoadAttempted] = useState(false);
+  const [primarySourceBible, setPrimarySourceBible] = useState<string | null>(
+    null,
+  );
 
   const handleMessage = useCallback((event: MessageEvent) => {
     console.log('Received message:', event.data);
@@ -25,6 +28,7 @@ function App() {
       case 'projectCreated': {
         console.log('Setting project overview:', message.data);
         setProjectOverview(message.data);
+        setPrimarySourceBible(message.data.primarySourceBible);
         setIsLoading(false);
         setError(null);
         setNoProjectFound(false);
@@ -93,12 +97,19 @@ function App() {
     setIsLoading(true);
     setError(null);
     vscode.postMessage({ command, data });
-    
+
     // Schedule a refresh after a short delay
     setTimeout(() => {
       vscode.postMessage({ command: 'requestProjectOverview' });
     }, 1500); // Wait for 1.5 seconds before requesting an update
   }, []);
+
+  const handleSelectPrimarySourceBible = useCallback(
+    (biblePath: string) => {
+      handleAction('selectPrimarySourceBible', biblePath);
+    },
+    [handleAction],
+  );
 
   return (
     <div
@@ -322,8 +333,46 @@ function App() {
                 <ul>
                   {projectOverview.sourceTextBibles.map((bible) => {
                     const fileName = bible.path.split('/').pop() || '';
+                    const isPrimary = bible.path === primarySourceBible;
                     return (
-                      <li key={bible.path} style={{ marginBottom: '4px' }}>
+                      <li
+                        key={bible.path}
+                        style={{
+                          marginBottom: '4px',
+                          listStyleType: 'none',
+                          padding: '4px',
+                          backgroundColor: 'var(--vscode-editor-background)',
+                          border: '1px solid var(--vscode-widget-border)',
+                          borderRadius: '3px',
+                        }}
+                      >
+                        {isPrimary && (
+                          <i
+                            className="codicon codicon-star-full"
+                            style={{
+                              marginRight: '4px',
+                              color:
+                                'var(--vscode-inputValidation-infoForeground)',
+                            }}
+                            title="Primary source Bible"
+                          ></i>
+                        )}
+                        {!isPrimary && (
+                          <VSCodeButton
+                            appearance="icon"
+                            onClick={() =>
+                              handleSelectPrimarySourceBible(bible.path)
+                            }
+                            title="Set as primary source Bible"
+                            style={{
+                              float: 'right',
+                              color:
+                                'var(--vscode-inputValidation-infoForeground)',
+                            }}
+                          >
+                            <i className="codicon codicon-star-empty"></i>
+                          </VSCodeButton>
+                        )}
                         <a
                           href="#"
                           onClick={() => handleAction('openBible', bible)}
@@ -369,9 +418,13 @@ function App() {
           </VSCodeDataGridRow>
 
           <VSCodeDataGridRow>
-            <VSCodeDataGridCell grid-column="1">Export Project</VSCodeDataGridCell>
+            <VSCodeDataGridCell grid-column="1">
+              Export Project
+            </VSCodeDataGridCell>
             <VSCodeDataGridCell grid-column="3">
-              <VSCodeButton onClick={() => handleAction('exportProjectAsPlaintext')}>
+              <VSCodeButton
+                onClick={() => handleAction('exportProjectAsPlaintext')}
+              >
                 <i className="codicon codicon-export"></i>
               </VSCodeButton>
             </VSCodeDataGridCell>
