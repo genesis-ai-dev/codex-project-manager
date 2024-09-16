@@ -163,57 +163,18 @@ export class CustomWebviewProvider implements vscode.WebviewViewProvider {
           await this.updateProjectOverview(true);
           break;
         case "openProjectSettings":
-          vscode.commands.executeCommand(
-            "codex-project-manager.editProjectSettings"
-          );
-          break;
         case "renameProject":
-          vscode.commands.executeCommand(
-            "codex-project-manager.nameProject",
-            true
-          );
-          break;
         case "changeUserName":
-          vscode.commands.executeCommand(
-            "codex-project-manager.userName",
-            true
-          );
-          break;
         case "editAbbreviation":
-          vscode.commands.executeCommand(
-            "codex-project-manager.editAbbreviation"
-          );
-          break;
         case "changeSourceLanguage":
-          console.log("changeSourceLanguage called");
-          vscode.commands.executeCommand(
-            "codex-project-manager.promptUserForSourceLanguage"
-          );
-          break;
         case "changeTargetLanguage":
-          vscode.commands.executeCommand(
-            "codex-project-manager.promptUserForTargetLanguage"
-          );
-          break;
-        case "downloadTargetTextBibles":
-          vscode.commands.executeCommand(
-            "codex-project-manager.downloadTargetTextBibles"
-          );
-          break;
-        case "openAISettings":
-          vscode.commands.executeCommand(
-            "codex-project-manager.openAISettings"
-          );
-          break;
         case "selectCategory":
-          vscode.commands.executeCommand(
-            "codex-project-manager.selectCategory"
-          );
-          break;
         case "downloadSourceTextBibles":
-          vscode.commands.executeCommand(
-            "codex-project-manager.downloadSourceTextBibles"
-          );
+        case "openAISettings":
+          console.log(`${message.command} called`);
+          await vscode.commands.executeCommand(`codex-project-manager.${message.command}`);
+          // Schedule a refresh after a short delay
+          setTimeout(() => this.updateProjectOverview(true), 1000);
           break;
         case "createNewProject":
           await this.createNewProject();
@@ -318,6 +279,8 @@ export function registerProjectManagerViewWebviewProvider(
     )
   );
 
-  // .show() the sidebar / view
-  vscode.commands.executeCommand("project-manager-sidebar.show");
+  // Show the sidebar when loading - which includes the button to create a new project
+  vscode.commands.executeCommand(
+    "project-manager-sidebar.focus",
+  );
 }

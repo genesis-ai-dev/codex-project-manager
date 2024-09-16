@@ -307,13 +307,11 @@ export async function activate(context: vscode.ExtensionContext) {
   // Register command to prompt user for target language
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "codex-project-manager.promptUserForTargetLanguage",
+      "codex-project-manager.changeTargetLanguage",
       executeWithRedirecting(async () => {
         const metadata = await accessMetadataFile();
         if (
-          !metadata?.languages?.find(
-            (lang: any) => lang.projectStatus === LanguageProjectStatus.SOURCE
-          )
+          !metadata
         ) {
           vscode.commands.executeCommand(
             "codex-project-manager.showProjectOverview"
@@ -357,13 +355,11 @@ export async function activate(context: vscode.ExtensionContext) {
     ),
     // Register command to prompt user for source language
     vscode.commands.registerCommand(
-      "codex-project-manager.promptUserForSourceLanguage",
+      "codex-project-manager.changeSourceLanguage",
       executeWithRedirecting(async () => {
         const metadata = await accessMetadataFile();
         if (
-          !metadata?.meta?.generator?.userName ||
-          metadata?.meta?.generator?.userName === ""
-        ) {
+          !metadata) {
           vscode.commands.executeCommand(
             "codex-project-manager.showProjectOverview"
           );
@@ -424,7 +420,7 @@ export async function activate(context: vscode.ExtensionContext) {
     ),
     // Register command to name the project
     vscode.commands.registerCommand(
-      "codex-project-manager.nameProject",
+      "codex-project-manager.renameProject",
       executeWithRedirecting(async () => {
         redirecting = true;
         const isMetadataInitialized = await checkIfMetadataIsInitialized();
@@ -461,7 +457,7 @@ export async function activate(context: vscode.ExtensionContext) {
     ),
     // Register command to set user name
     vscode.commands.registerCommand(
-      "codex-project-manager.userName",
+      "codex-project-manager.changeUserName",
       executeWithRedirecting(async () => {
         const metadata = await accessMetadataFile();
         if (!metadata) {
@@ -518,21 +514,6 @@ export async function activate(context: vscode.ExtensionContext) {
             category:
               "project-accelerate.codex-project-manager#codexWalkthrough",
             step: "project-accelerate.codex-project-manager#openFolder",
-          },
-          true
-        );
-      })
-    ),
-    // Register command to edit project settings
-    vscode.commands.registerCommand(
-      "codex-project-manager.editProjectSettings",
-      executeWithRedirecting(async () => {
-        vscode.commands.executeCommand(
-          "workbench.action.openWalkthrough",
-          {
-            category:
-              "project-accelerate.codex-project-manager#codexWalkthrough",
-            step: "projectName",
           },
           true
         );
@@ -689,7 +670,7 @@ export async function activate(context: vscode.ExtensionContext) {
       async () => {
         vscode.commands.executeCommand(
           "workbench.action.openSettings",
-          "@ext:project-accelerate.codex-copilot"
+          "translators-copilot"
         );
       }
     ),
